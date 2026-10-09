@@ -1,0 +1,43 @@
+:root {
+  --primary: #0f5132;
+  --primary2: #198754;
+  --gold: #d8a83e;
+  --bg: #f4f7f6;
+  --card: #ffffff;
+  --text: #17221d;
+  --muted: #68756f;
+  --border: #dfe7e2;
+  --danger: #c0392b;
+  --shadow: 0 10px 30px rgba(15, 81, 50, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button, input, select, textarea { font: inherit; }
+
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid rgba(25, 135, 84, 0.18);
+  border-color: var(--primary2);
+}
+
+/* small spacing / layout helpers */
+.mt-0 { margin-top: 0 !important; }
+.mt-12 { margin-top: 12px; }
+.mt-15 { margin-top: 15px; }
+.mt-18 { margin-top: 18px; }
+.mt-20 { margin-top: 20px; }
+.mt-22 { margin-top: 22px; }
+.mb-16 { margin-bottom: 16px; }
+.block { display: block; }
+.pointer { cursor: pointer; }
+.row-gap { display: flex; gap: 8px; }
+.row-gap.wrap { flex-wrap: wrap; }
+.grow { flex: 1; min-width: 220px; }
+.full { width: 100%; }
