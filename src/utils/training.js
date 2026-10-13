@@ -1,10 +1,10 @@
-import { PASS_MARK } from "../constants/config";
+import { getPassMark } from "./settings";
 
 export const clone = (x) => JSON.parse(JSON.stringify(x));
 export const today = () => new Date().toISOString().slice(0, 10);
 
 export const hasScore = (e) => e.score !== null && e.score !== undefined && e.score !== "";
-export const isPassed = (e) => hasScore(e) && Number(e.score) >= PASS_MARK;
+export const isPassed = (e) => hasScore(e) && Number(e.score) >= getPassMark();
 export const progressOf = (e) => Math.max(0, Math.min(100, Number(e.progress) || 0));
 
 export function assessmentLabel(e) {
@@ -36,9 +36,12 @@ export const idExists = (list, id) => list.some((x) => same(x.id, id));
 export const usernameExists = (list, username) => list.some((x) => same(x.username, username));
 export const isDuplicate = (list, id, username) => idExists(list, id) || usernameExists(list, username);
 
-export function filterEmployees(list, search, filter) {
+export const typeOf = (e) => (e.type === "Contractual" ? "Contractual" : "Regular");
+
+export function filterEmployees(list, search, filter, type = "all") {
   const q = search.trim().toLowerCase();
   return list.filter((e) => {
+    if (type !== "all" && typeOf(e) !== type) return false;
     if (q && !`${e.name || ""} ${e.id || ""} ${e.department || ""}`.toLowerCase().includes(q)) return false;
     const p = progressOf(e);
     switch (filter) {
@@ -59,6 +62,8 @@ export function computeStats(employees) {
   const count = (fn) => employees.filter(fn).length;
   return {
     total: employees.length,
+    regular: count((e) => typeOf(e) === "Regular"),
+    contractual: count((e) => typeOf(e) === "Contractual"),
     completed: count((e) => progressOf(e) >= 100),
     passed: count(isPassed),
     certificates: count((e) => e.certificate === "Issued"),

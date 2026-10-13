@@ -1,10 +1,9 @@
-import { DEFAULT_COURSE, DEFAULT_PASSWORD } from "../constants/config";
+import { getDefaultCourse, getDefaultPassword } from "./settings";
 import { parseCSV, downloadCSV } from "./csv";
-import { assessmentLabel, progressOf, today } from "./training";
 
 export const TEMPLATE_HEADERS = [
   "Employee ID", "Name", "Department", "Designation", "Mine / Site", "Email", "Mobile",
-  "Joining Date", "Training Programme", "Username", "Temporary Password", "Status",
+  "Joining Date", "Employee Type", "Contractor / Agency", "Training Programme", "Username", "Temporary Password", "Status",
 ];
 
 // xlsx is loaded only when needed, so it stays out of the main bundle.
@@ -17,7 +16,7 @@ async function loadXLSX() {
 }
 
 export async function downloadEmployeeTemplate() {
-  const sample = ["EMP-006", "Rahul Kumar", "Mining", "Mining Mate", "Bolani", "rahul@example.com", "9876543210", "2026-08-27", DEFAULT_COURSE, "rahul006", DEFAULT_PASSWORD, "Active"];
+  const sample = ["EMP-006", "Rahul Kumar", "Mining", "Mining Mate", "Bolani", "rahul@example.com", "9876543210", "2026-08-27", "Regular", "", getDefaultCourse(), "rahul006", getDefaultPassword(), "Active"];
   const XLSX = await loadXLSX();
   if (XLSX) {
     const wb = XLSX.utils.book_new();
@@ -25,24 +24,6 @@ export async function downloadEmployeeTemplate() {
     XLSX.writeFile(wb, "MineMagma_Employee_Template.xlsx");
   } else {
     downloadCSV([TEMPLATE_HEADERS, sample], "MineMagma_Employee_Template.csv");
-  }
-}
-
-export async function exportTrainingReport(employees) {
-  const headers = ["Employee ID", "Name", "Department", "Designation", "Mine / Site", "Training Programme", "Training Progress (%)", "Assessment", "Practical", "OJT", "Certificate", "Status"];
-  const rows = employees.map((e) => [
-    e.id, e.name, e.department || "", e.designation || "", e.mine || "", e.course || "",
-    progressOf(e), assessmentLabel(e), e.practical || "Pending", e.ojt || "Pending",
-    e.certificate || "Pending", e.status || "Active",
-  ]);
-  const stamp = today();
-  const XLSX = await loadXLSX();
-  if (XLSX) {
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...rows]), "Training Status");
-    XLSX.writeFile(wb, `MineMagma_Training_Status_${stamp}.xlsx`);
-  } else {
-    downloadCSV([headers, ...rows], `MineMagma_Training_Status_${stamp}.csv`);
   }
 }
 
@@ -60,9 +41,11 @@ export function normalizeEmployeeRow(r) {
     email: g("Email"),
     mobile: g("Mobile", "Mobile No"),
     joining: g("Joining Date"),
-    course: g("Training Programme", "Assigned Course", "Course") || DEFAULT_COURSE,
+    type: /contract/i.test(g("Employee Type", "Type")) ? "Contractual" : "Regular",
+    contractor: g("Contractor / Agency", "Contractor", "Agency"),
+    course: g("Training Programme", "Assigned Course", "Course") || getDefaultCourse(),
     username: g("Username", "User Name"),
-    password: g("Temporary Password", "Password") || DEFAULT_PASSWORD,
+    password: g("Temporary Password", "Password") || getDefaultPassword(),
     status: g("Status") || "Active",
     progress: 0, score: null, practical: "Pending", ojt: "Pending", certificate: "Pending",
   };

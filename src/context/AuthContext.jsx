@@ -1,33 +1,39 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { DEMO_ADMIN, STORAGE_KEYS } from "../constants/config";
+import { STORAGE_KEYS } from "../constants/config";
 import { loadJSON, saveJSON } from "../utils/storage";
 import { useData } from "./DataContext";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const { employees } = useData();
+  const { employees, managers, settings } = useData();
 
   const [user, setUser] = useState(() => {
     const saved = loadJSON(STORAGE_KEYS.session, sessionStorage);
     if (saved?.role === "admin") return saved;
+    if (saved?.role === "manager" && managers.some((x) => x.id === saved.id && x.status !== "Inactive")) return saved;
     if (saved?.role === "employee" && employees.some((x) => x.id === saved.id && x.status !== "Inactive")) return saved;
     return null;
   });
 
-  // Returns an error message, or null on success.
+  // role: "employee" | "manager" | "admin". Returns an error message, or null on success.
   const login = useCallback(
     (role, username, password) => {
       const name = username.trim();
+      const matches = (u) => String(u.username || "").toLowerCase() === name.toLowerCase() && u.password === password;
       let session;
 
       if (role === "admin") {
-        if (name !== DEMO_ADMIN.username || password !== DEMO_ADMIN.password) return "Invalid username or password.";
-        session = { role: "admin", name: DEMO_ADMIN.name };
+        const a = settings.admin;
+        if (name.toLowerCase() !== String(a.username).toLowerCase() || password !== a.password) return "Invalid username or password.";
+        session = { role: "admin", name: a.name || "Administrator" };
+      } else if (role === "manager") {
+        const m = managers.find(matches);
+        if (!m) return "Invalid username or password.";
+        if (m.status === "Inactive") return "This account is inactive. Please contact the administrator.";
+        session = { role: "manager", name: m.name, id: m.id };
       } else {
-        const emp = employees.find(
-          (x) => String(x.username || "").toLowerCase() === name.toLowerCase() && x.password === password
-        );
+        const emp = employees.find(matches);
         if (!emp) return "Invalid username or password.";
         if (emp.status === "Inactive") return "This account is inactive. Please contact the administrator.";
         session = { role: "employee", name: emp.name, id: emp.id };
@@ -37,7 +43,7 @@ export function AuthProvider({ children }) {
       setUser(session);
       return null;
     },
-    [employees]
+    [employees, managers, settings]
   );
 
   const logout = useCallback(() => {

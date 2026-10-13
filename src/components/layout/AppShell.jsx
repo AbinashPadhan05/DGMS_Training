@@ -3,28 +3,32 @@ import { useAuth } from "../../context/AuthContext";
 import Dashboard from "../../pages/employee/Dashboard";
 import Exam from "../../pages/employee/Exam";
 import Certificate from "../../pages/employee/Certificate";
-import AdminPage from "../../pages/admin/AdminPage";
-import Sidebar from "./Sidebar";
+import SyllabusPage from "../../pages/common/SyllabusPage";
+import ManagerPage from "../../pages/manager/ManagerPage";
+import Sidebar, { EMPLOYEE_NAV, MANAGER_NAV } from "./Sidebar";
 import Topbar from "./Topbar";
 
+// Shell for the Employee and Manager roles. The Admin panel lives in AdminShell (/admin).
 export default function AppShell() {
   const { user } = useAuth();
-  const isAdmin = user.role === "admin";
-  const [page, setPage] = useState(isAdmin ? "admin" : "dashboard");
+  const isManager = user.role === "manager";
+  const nav = isManager ? MANAGER_NAV : EMPLOYEE_NAV;
+  const [page, setPage] = useState(nav[0].page);
 
-  // Admins only ever see the admin page; employees can't open it.
-  const current = isAdmin ? "admin" : page === "admin" ? "dashboard" : page;
+  // Never render a page the role has no menu entry for.
+  const current = nav.some((n) => n.page === page) ? page : nav[0].page;
 
   return (
     <>
       <Topbar />
       <div className="layout">
-        <Sidebar role={user.role} page={current} onNavigate={setPage} />
+        <Sidebar items={nav} page={current} onNavigate={setPage} />
         <main>
           {current === "dashboard" && <Dashboard />}
           {current === "exam" && <Exam onNavigate={setPage} />}
           {current === "certificate" && <Certificate />}
-          {current === "admin" && <AdminPage />}
+          {current === "syllabus" && <SyllabusPage />}
+          {current === "manager" && <ManagerPage />}
         </main>
       </div>
     </>

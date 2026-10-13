@@ -1,5 +1,5 @@
 import Pill from "../../components/common/Pill";
-import { PASS_MARK } from "../../constants/config";
+import { getPassMark } from "../../utils/settings";
 import useCurrentEmployee from "../../hooks/useCurrentEmployee";
 import { assessmentLabel, isPassed, progressOf } from "../../utils/training";
 
@@ -32,7 +32,7 @@ export default function Certificate() {
           <h3>Certificate not available yet</h3>
           <p className="muted">The certificate is issued automatically when all requirements below are complete.</p>
           <Requirement done={progressOf(e) >= 100} label="Training completed" status={progressOf(e) >= 100 ? "Completed" : "Pending"} />
-          <Requirement done={isPassed(e)} label={`Assessment passed (min ${PASS_MARK}%)`} status={assessmentLabel(e)} />
+          <Requirement done={isPassed(e)} label={`Assessment passed (min ${getPassMark()}%)`} status={assessmentLabel(e)} />
           <Requirement done={e.practical === "Completed"} label="Practical verified" status={e.practical || "Pending"} />
           <Requirement done={e.ojt === "Completed"} label="OJT verified" status={e.ojt || "Pending"} />
         </div>

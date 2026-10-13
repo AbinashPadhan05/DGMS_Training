@@ -11,12 +11,19 @@ npm run build      # production build -> dist/
 npm run preview    # preview the production build
 ```
 
-## Demo logins
+## Roles & logins
 
-| Role     | Username   | Password      |
-|----------|------------|---------------|
-| Employee | `employee` | `employee123` |
-| Admin    | `admin`    | `admin123`    |
+| Role     | Where                  | Username   | Password      |
+|----------|------------------------|------------|---------------|
+| Employee | `/` (Employee tab)     | `employee` | `employee123` |
+| Manager  | `/` (Manager tab)      | `manager`  | `manager123`  |
+| Admin    | `/admin` (hidden page) | `admin`    | `admin123`    |
+
+- **Employee** – own training status, syllabus & circulars (all circulars visible), assessment, certificate.
+- **Manager** (the old "admin") – monitor/update training records, add/import employees, view syllabus. Cannot delete employees or manage the question bank.
+- **Admin** – `/admin`, not linked anywhere on the site. Full control: employees (edit/delete/passwords), managers, circulars & syllabus, question bank, PDF reports, settings (pass mark, defaults, admin password), backup/restore.
+- Employees are **Regular** or **Contractual** (tabs, filters, reports). Reports download as **PDF only**.
+- If hosted statically, configure the server to serve `index.html` for `/admin` (SPA fallback).
 
 ## Folder structure
 
@@ -34,9 +41,11 @@ src/
 │   ├── layout/               # AppShell, Topbar, Sidebar
 │   └── admin/                # admin panel building blocks
 ├── pages/
-│   ├── LoginPage.jsx
+│   ├── LoginPage.jsx         # staff login (/) and admin login (/admin)
 │   ├── employee/             # Dashboard, Exam, Certificate
-│   └── admin/AdminPage.jsx
+│   ├── manager/              # ManagerPage
+│   ├── common/               # SyllabusPage (employees + managers)
+│   └── admin/                # Overview, Employees, Managers, Circulars, Questions, Reports, Settings
 └── styles/                   # variables, layout, components, login, certificate
 ```
 

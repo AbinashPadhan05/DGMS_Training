@@ -1,20 +1,26 @@
-export const PASS_MARK = 40;
-
 export const STORAGE_KEYS = {
   employees: "mineMagmaEmployees",
   questions: "mineMagmaQuestions",
+  managers: "mineMagmaManagers",
+  circulars: "mineMagmaCirculars",
+  settings: "mineMagmaSettings",
   session: "mineMagmaSession",
 };
 
 // Demo only. Real authentication must be done on a server.
-export const DEMO_ADMIN = {
-  username: "admin",
-  password: "admin123",
-  name: "MineMagma Administrator",
+export const DEFAULT_SETTINGS = {
+  passMark: 40,
+  defaultCourse: "General Mine Safety",
+  defaultPassword: "Welcome@123",
+  admin: { name: "MineMagma Administrator", username: "admin", password: "admin123" },
 };
 
-export const DEFAULT_COURSE = "General Mine Safety";
-export const DEFAULT_PASSWORD = "Welcome@123";
+export const DEFAULT_COURSE = DEFAULT_SETTINGS.defaultCourse;
+export const DEFAULT_PASSWORD = DEFAULT_SETTINGS.defaultPassword;
+
+export const ADMIN_PATH = "/admin";
+
+export const EMPLOYEE_TYPES = ["Regular", "Contractual"];
 
 export const STEP_STATUSES = ["Pending", "In Progress", "Completed"];
 

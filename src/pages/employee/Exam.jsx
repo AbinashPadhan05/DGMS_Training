@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PASS_MARK } from "../../constants/config";
+import { getPassMark } from "../../utils/settings";
 import { useData } from "../../context/DataContext";
 import useCurrentEmployee from "../../hooks/useCurrentEmployee";
 import { hasScore, isPassed, progressOf } from "../../utils/training";
@@ -36,7 +36,7 @@ function ExamForm({ questions, onSubmit }) {
 
   return (
     <div className="card">
-      <p className="muted">{questions.length} questions. Passing threshold: {PASS_MARK}%.</p>
+      <p className="muted">{questions.length} questions. Passing threshold: {getPassMark()}%.</p>
       <form onSubmit={handleSubmit}>
         {questions.map((q, i) => (
           <div className="exam-q" key={i}>
@@ -105,7 +105,7 @@ export default function Exam({ onNavigate }) {
     <section>
       <div className="section-title">
         <h2>Online Assessment</h2>
-        <span className="pill">Passing score: {PASS_MARK}%</span>
+        <span className="pill">Passing score: {getPassMark()}%</span>
       </div>
       {body}
     </section>

@@ -12,10 +12,14 @@ export default function AdminStats({ employees }) {
         <StatCard value={s.certificates} label="Certificates Issued" />
       </div>
       <div className="grid four">
+        <StatCard value={s.regular} label="Regular Employees" />
+        <StatCard value={s.contractual} label="Contractual Employees" />
         <StatCard value={s.inProgress} label="Training In Progress" />
+        <StatCard value={s.certPending} label="Certification Pending" />
+      </div>
+      <div className="grid four">
         <StatCard value={s.practical} label="Practical Completed" />
         <StatCard value={s.ojt} label="OJT Completed" />
-        <StatCard value={s.certPending} label="Certification Pending" />
       </div>
     </>
   );

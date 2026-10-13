@@ -1,8 +1,8 @@
 import Pill from "../../components/common/Pill";
 import StatCard from "../../components/common/StatCard";
-import { PASS_MARK } from "../../constants/config";
+import { getPassMark } from "../../utils/settings";
 import useCurrentEmployee from "../../hooks/useCurrentEmployee";
-import { assessmentLabel, hasScore, isPassed, progressOf } from "../../utils/training";
+import { assessmentLabel, hasScore, isPassed, progressOf, typeOf } from "../../utils/training";
 
 export default function Dashboard() {
   const e = useCurrentEmployee();
@@ -26,7 +26,7 @@ export default function Dashboard() {
     },
     { icon: "🛠️", title: "Practical Training", meta: "Verified by the trainer / administrator", status: e.practical || "Pending", done: e.practical === "Completed" },
     { icon: "👷", title: "On-the-Job Training (OJT)", meta: "Verified by the supervisor / administrator", status: e.ojt || "Pending", done: e.ojt === "Completed" },
-    { icon: "📝", title: "Online Assessment", meta: `Passing score: ${PASS_MARK}%`, status: assessmentLabel(e), done: isPassed(e) },
+    { icon: "📝", title: "Online Assessment", meta: `Passing score: ${getPassMark()}%`, status: assessmentLabel(e), done: isPassed(e) },
     { icon: "🎓", title: "Certificate", meta: "Issued after assessment, practical and OJT are complete", status: e.certificate || "Pending", done: e.certificate === "Issued" },
   ];
 
@@ -40,6 +40,7 @@ export default function Dashboard() {
         <div className="hero-badge">
           <div className="muted hero-badge-label">Training programme</div>
           <strong>{e.course || "—"}</strong>
+          <div className="muted hero-badge-label">{typeOf(e)} employee</div>
         </div>
       </div>
 

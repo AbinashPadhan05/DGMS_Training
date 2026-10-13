@@ -2,21 +2,27 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const COPY = {
+  manager: {
+    title: "Manager Login",
+    text: "Monitor employee training, assessment and certification status.",
+    button: "Login as Manager",
+  },
+  admin: {
+    title: "Administrator Login",
+    text: "Restricted area. Authorised administrators only.",
+    button: "Login as Administrator",
+  },
   employee: {
     title: "Employee Login",
     text: "View your training status, take the assessment and get your certificate.",
     button: "Login as Employee",
   },
-  admin: {
-    title: "Admin Login",
-    text: "Monitor employee training, assessment and certification status.",
-    button: "Login as Admin",
-  },
 };
 
-export default function LoginPage() {
+// variant "staff": Employee / Manager tabs (home page). variant "admin": administrator only (/admin).
+export default function LoginPage({ variant = "staff" }) {
   const { login } = useAuth();
-  const [role, setRole] = useState("employee");
+  const [role, setRole] = useState(variant === "admin" ? "admin" : "employee");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -45,14 +51,16 @@ export default function LoginPage() {
         </div>
 
         <div className="login-card">
-          <div className="login-tabs">
-            <button type="button" className={`login-tab ${role === "employee" ? "active" : ""}`} onClick={() => selectRole("employee")}>
-              👷 Employee Login
-            </button>
-            <button type="button" className={`login-tab ${role === "admin" ? "active" : ""}`} onClick={() => selectRole("admin")}>
-              ⚙️ Admin Login
-            </button>
-          </div>
+          {variant === "staff" && (
+            <div className="login-tabs">
+              <button type="button" className={`login-tab ${role === "employee" ? "active" : ""}`} onClick={() => selectRole("employee")}>
+                👷 Employee Login
+              </button>
+              <button type="button" className={`login-tab ${role === "manager" ? "active" : ""}`} onClick={() => selectRole("manager")}>
+                📋 Manager Login
+              </button>
+            </div>
+          )}
 
           <div>
             <h2>{copy.title}</h2>
@@ -88,14 +96,16 @@ export default function LoginPage() {
             <div className="login-error" role="alert">{error}</div>
           </form>
 
-          <div className="demo-credentials">
-            <strong>Demo credentials</strong>
-            {role === "employee" ? (
-              <div>Employee: <code>employee</code> / <code>employee123</code></div>
-            ) : (
-              <div>Admin: <code>admin</code> / <code>admin123</code></div>
-            )}
-          </div>
+          {variant === "staff" && (
+            <div className="demo-credentials">
+              <strong>Demo credentials</strong>
+              {role === "employee" ? (
+                <div>Employee: <code>employee</code> / <code>employee123</code></div>
+              ) : (
+                <div>Manager: <code>manager</code> / <code>manager123</code></div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="login-footer">© MineMagma • Demo Prototype</div>

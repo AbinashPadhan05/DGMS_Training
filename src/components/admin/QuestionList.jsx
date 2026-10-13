@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { useData } from "../../context/DataContext";
+import QuestionForm from "./QuestionForm";
 
 export default function QuestionList() {
   const { questions, deleteQuestion } = useData();
+
+  const [editIndex, setEditIndex] = useState(null);
 
   const handleDelete = (i) => {
     if (questions.length <= 1) { alert("At least one question must remain."); return; }
@@ -15,13 +19,18 @@ export default function QuestionList() {
         <h3>Assessment Question Bank</h3>
         <span className="pill">{questions.length}</span>
       </div>
-      {questions.map((x, i) => (
+      {questions.map((x, i) => editIndex === i ? (
+        <QuestionForm key={i} editing={{ index: i, question: x }} onClose={() => setEditIndex(null)} />
+      ) : (
         <div className="admin-row" key={i}>
           <div>
             <div className="admin-row-title">{i + 1}. {x.q}</div>
             <div className="admin-row-meta">Correct: {String.fromCharCode(65 + x.c)} — {x.a[x.c]}</div>
           </div>
-          <button className="btn danger" onClick={() => handleDelete(i)}>Delete</button>
+          <div className="row-gap">
+            <button className="btn secondary" onClick={() => setEditIndex(i)}>Edit</button>
+            <button className="btn danger" onClick={() => handleDelete(i)}>Delete</button>
+          </div>
         </div>
       ))}
     </div>

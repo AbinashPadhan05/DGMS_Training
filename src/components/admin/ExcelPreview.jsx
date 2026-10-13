@@ -5,6 +5,7 @@ const COLUMNS = [
   { key: "name", label: "Name" },
   { key: "department", label: "Department" },
   { key: "designation", label: "Designation" },
+  { key: "type", label: "Type" },
   { key: "mine", label: "Mine / Site" },
   { key: "course", label: "Training Programme" },
   { key: "username", label: "Username" },
