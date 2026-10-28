@@ -6,6 +6,7 @@ export default function SettingsPage() {
   const { settings, updateSettings, exportBackup, restoreBackup, resetAllData } = useData();
   const [general, setGeneral] = useState({
     passMark: String(settings.passMark),
+    refresherMonths: String(settings.refresherMonths),
     defaultCourse: settings.defaultCourse,
     defaultPassword: settings.defaultPassword,
   });
@@ -14,8 +15,10 @@ export default function SettingsPage() {
   const saveGeneral = () => {
     const pm = Number(general.passMark);
     if (!(pm >= 1 && pm <= 100)) { alert("Pass mark must be between 1 and 100."); return; }
+    const rm = Number(general.refresherMonths);
+    if (!(rm >= 1 && rm <= 240)) { alert("Refresher interval must be between 1 and 240 months."); return; }
     if (!general.defaultCourse.trim() || !general.defaultPassword) { alert("Default course and password are required."); return; }
-    updateSettings({ passMark: pm, defaultCourse: general.defaultCourse.trim(), defaultPassword: general.defaultPassword });
+    updateSettings({ passMark: pm, refresherMonths: rm, defaultCourse: general.defaultCourse.trim(), defaultPassword: general.defaultPassword });
     alert("Settings saved.");
   };
 
@@ -65,6 +68,11 @@ export default function SettingsPage() {
         <h3>General</h3>
         <div className="grid cols-3 mt-0">
           <div><label className="muted" htmlFor="st-pm">Assessment pass mark (%)</label><input id="st-pm" type="number" min="1" max="100" className="admin-input" value={general.passMark} onChange={(e) => setGeneral((g) => ({ ...g, passMark: e.target.value }))} /></div>
+          <div>
+            <label className="muted" htmlFor="st-rm">Refresher interval (months)</label>
+            <input id="st-rm" type="number" min="1" max="240" className="admin-input" value={general.refresherMonths} onChange={(e) => setGeneral((g) => ({ ...g, refresherMonths: e.target.value }))} />
+            <div className="admin-row-meta">The circular does not state the interval (it is set by Rule 159). Confirm the correct value before use.</div>
+          </div>
           <div><label className="muted" htmlFor="st-course">Default training programme</label><input id="st-course" className="admin-input" value={general.defaultCourse} onChange={(e) => setGeneral((g) => ({ ...g, defaultCourse: e.target.value }))} /></div>
           <div><label className="muted" htmlFor="st-pw">Default employee password</label><input id="st-pw" className="admin-input" value={general.defaultPassword} onChange={(e) => setGeneral((g) => ({ ...g, defaultPassword: e.target.value }))} /></div>
         </div>

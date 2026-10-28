@@ -20,6 +20,12 @@ export default function AdminStats({ employees }) {
       <div className="grid four">
         <StatCard value={s.practical} label="Practical Completed" />
         <StatCard value={s.ojt} label="OJT Completed" />
+        <StatCard value={s.reeval} label="Additional Training / Re-evaluation" />
+        <StatCard value={s.categoryMissing} label="Mine Category Not Set" />
+      </div>
+      <div className="grid four">
+        <StatCard value={s.refresherSoon} label="Refresher Due in 30 Days" />
+        <StatCard value={s.refresherOverdue} label="Refresher Overdue" />
       </div>
     </>
   );

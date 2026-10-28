@@ -1,9 +1,10 @@
+import { CATEGORIES, GRADES } from "../constants/training";
 import { getDefaultCourse, getDefaultPassword } from "./settings";
 import { parseCSV, downloadCSV } from "./csv";
 
 export const TEMPLATE_HEADERS = [
   "Employee ID", "Name", "Department", "Designation", "Mine / Site", "Email", "Mobile",
-  "Joining Date", "Employee Type", "Contractor / Agency", "Training Programme", "Username", "Temporary Password", "Status",
+  "Joining Date", "Employee Type", "Contractor / Agency", "Mine Category", "Grade", "Highly Skilled (Yes/No)", "Training Programme", "Username", "Temporary Password", "Status",
 ];
 
 // xlsx is loaded only when needed, so it stays out of the main bundle.
@@ -16,7 +17,7 @@ async function loadXLSX() {
 }
 
 export async function downloadEmployeeTemplate() {
-  const sample = ["EMP-006", "Rahul Kumar", "Mining", "Mining Mate", "Bolani", "rahul@example.com", "9876543210", "2026-08-27", "Regular", "", getDefaultCourse(), "rahul006", getDefaultPassword(), "Active"];
+  const sample = ["EMP-006", "Rahul Kumar", "Mining", "Mining Mate", "Bolani", "rahul@example.com", "9876543210", "2026-08-27", "Regular", "", "Opencast Mines (Coal & Metal)", "Worker", "No", getDefaultCourse(), "rahul006", getDefaultPassword(), "Active"];
   const XLSX = await loadXLSX();
   if (XLSX) {
     const wb = XLSX.utils.book_new();
@@ -25,6 +26,13 @@ export async function downloadEmployeeTemplate() {
   } else {
     downloadCSV([TEMPLATE_HEADERS, sample], "MineMagma_Employee_Template.csv");
   }
+}
+
+function matchCategory(text) {
+  const t = text.trim().toLowerCase();
+  if (!t) return "";
+  const hit = CATEGORIES.find((c) => c.key === t || c.label.toLowerCase() === t || c.label.toLowerCase().startsWith(t.replace(/\s+mines?$/, "")));
+  return hit ? hit.key : "";
 }
 
 export function normalizeEmployeeRow(r) {
@@ -43,11 +51,13 @@ export function normalizeEmployeeRow(r) {
     joining: g("Joining Date"),
     type: /contract/i.test(g("Employee Type", "Type")) ? "Contractual" : "Regular",
     contractor: g("Contractor / Agency", "Contractor", "Agency"),
+    category: matchCategory(g("Mine Category", "Category")),
+    grade: GRADES.find((x) => x.toLowerCase() === g("Grade").toLowerCase()) || "Worker",
+    highlySkilled: /^(y|yes|true|1)$/i.test(g("Highly Skilled (Yes/No)", "Highly Skilled")),
     course: g("Training Programme", "Assigned Course", "Course") || getDefaultCourse(),
     username: g("Username", "User Name"),
     password: g("Temporary Password", "Password") || getDefaultPassword(),
     status: g("Status") || "Active",
-    progress: 0, score: null, practical: "Pending", ojt: "Pending", certificate: "Pending",
   };
 }
 

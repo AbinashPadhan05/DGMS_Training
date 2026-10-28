@@ -6,11 +6,14 @@ import { assessmentLabel, filterEmployees, progressOf } from "../../utils/traini
 import Pill from "../common/Pill";
 import TypePill from "../common/TypePill";
 import EmployeeForm from "./EmployeeForm";
-import RecordEditor from "./RecordEditor";
+import TrainingPanel from "./TrainingPanel";
+import { TRAINING_TYPES } from "../../constants/training";
+import { formatDate } from "../../utils/dates";
+import { categoryLabel, refresherInfo } from "../../utils/trainingRecords";
 
 // canDelete / canEditProfile are enabled only in the Admin panel.
 export default function TrainingStatusCard({ canDelete = false, canEditProfile = false }) {
-  const { employees, updateEmployee, toggleEmployeeStatus, deleteEmployee } = useData();
+  const { employees, toggleEmployeeStatus, deleteEmployee } = useData();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [typeTab, setTypeTab] = useState("all");
@@ -33,18 +36,13 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
     if (editingId === e.id) setEditingId(null);
   };
 
-  const handleSave = (id, patch) => {
-    updateEmployee(id, patch);
-    setEditingId(null);
-  };
-
   return (
     <div className="card mt-20">
       <div className="section-title">
         <div>
           <h3>Employee Training Status</h3>
           <div className="muted">
-            Track training progress, assessment, practical/OJT and certificate status. Use <strong>Update</strong> to change a record.
+            Track training progress, assessment, practical/OJT and certificate status. Use <strong>Training</strong> to update records or add a new training.
           </div>
         </div>
         <div className="row-gap wrap">
@@ -79,18 +77,19 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
               <th>Employee</th>
               <th>Employee ID</th>
               <th>Type</th>
-              <th>Training Programme</th>
+              <th>Training</th>
               <th>Training Progress</th>
               <th>Assessment</th>
               <th>Practical</th>
               <th>OJT</th>
               <th>Certificate</th>
+              <th>Refresher</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {list.length === 0 && (
-              <tr><td colSpan={10} className="empty-row">No employees found.</td></tr>
+              <tr><td colSpan={11} className="empty-row">No employees found.</td></tr>
             )}
             {list.map((e) => {
               const p = progressOf(e);
@@ -102,13 +101,17 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
                     <div className="admin-row-meta">
                       {e.designation || ""}{e.department ? ` • ${e.department}` : ""}
                     </div>
+                    <div className="admin-row-meta">{e.grade || "Worker"} • {categoryLabel(e)}{e.highlySkilled ? " • Highly skilled" : ""}</div>
                   </td>
                   <td>{e.id}</td>
                   <td>
                     <TypePill employee={e} />
                     {e.contractor && <div className="admin-row-meta">{e.contractor}</div>}
                   </td>
-                  <td>{e.course}</td>
+                  <td>
+                    <strong>{TRAINING_TYPES.find((t) => t.key === e.trainingType)?.short || "—"}</strong>
+                    <div className="admin-row-meta">{e.course} • {e.daysCompleted ?? "—"}/{e.requiredDays ?? "—"} days</div>
+                  </td>
                   <td className="progress-cell">
                     {p}%
                     <div className="progress" style={{ margin: "4px 0 0" }}><span style={{ width: `${p}%` }} /></div>
@@ -116,10 +119,25 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
                   <td><Pill text={assessmentLabel(e)} /></td>
                   <td><Pill text={e.practical || "Pending"} /></td>
                   <td><Pill text={e.ojt || "Pending"} /></td>
-                  <td><Pill text={e.certificate || "Pending"} /></td>
+                  <td>
+                    <Pill text={e.certificate || "Pending"} />
+                    {e.certNo && <div className="admin-row-meta">{e.certNo}</div>}
+                  </td>
+                  <td>
+                    {(() => {
+                      const r = refresherInfo(e);
+                      return r.status === "none" ? <span className="muted">—</span> : (
+                        <>
+                          <Pill text={r.status === "ok" ? "Up to date" : r.label} />
+                          <div className="admin-row-meta">Due {formatDate(r.due)}</div>
+                        </>
+                      );
+                    })()}
+                    {e.evalStatus && ["Additional training required", "Re-evaluation due"].includes(e.evalStatus) && <div><Pill text={e.evalStatus} /></div>}
+                  </td>
                   <td>
                     <div className="employee-actions">
-                      <button className="btn" onClick={() => setEditingId(e.id)}>Update</button>
+                      <button className="btn" onClick={() => setEditingId(e.id)}>Training</button>
                       <button className="btn secondary" onClick={() => toggleEmployeeStatus(e.id)}>
                         {e.status === "Inactive" ? "Activate" : "Deactivate"}
                       </button>
@@ -137,7 +155,7 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
       {profile && <EmployeeForm key={profile.id} employee={profile} onClose={() => setProfileId(null)} />}
 
       {editing && (
-        <RecordEditor key={editing.id} employee={editing} onSave={handleSave} onClose={() => setEditingId(null)} />
+        <TrainingPanel key={editing.id} employee={editing} canDelete={canDelete} onClose={() => setEditingId(null)} />
       )}
     </div>
   );

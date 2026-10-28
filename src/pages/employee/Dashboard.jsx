@@ -2,7 +2,10 @@ import Pill from "../../components/common/Pill";
 import StatCard from "../../components/common/StatCard";
 import { getPassMark } from "../../utils/settings";
 import useCurrentEmployee from "../../hooks/useCurrentEmployee";
+import { TRAINING_TYPES } from "../../constants/training";
+import { formatDate } from "../../utils/dates";
 import { assessmentLabel, hasScore, isPassed, progressOf, typeOf } from "../../utils/training";
+import { categoryLabel, refresherInfo } from "../../utils/trainingRecords";
 
 export default function Dashboard() {
   const e = useCurrentEmployee();
@@ -11,13 +14,16 @@ export default function Dashboard() {
   const p = progressOf(e);
   const trainingStatus = p >= 100 ? "Completed" : p > 0 ? "In Progress" : "Pending";
 
+  const typeLabel = TRAINING_TYPES.find((t) => t.key === e.trainingType)?.short || "—";
+  const refresher = refresherInfo(e);
+
   const rows = [
     {
       icon: "📋",
       title: "Training Programme",
       meta: (
         <>
-          {e.course || "—"} • {p}% complete
+          {e.course || "—"} • {typeLabel} training • {e.daysCompleted ?? "—"} of {e.requiredDays ?? "—"} days • {p}% complete
           <div className="progress"><span style={{ width: `${p}%` }} /></div>
         </>
       ),
@@ -50,6 +56,20 @@ export default function Dashboard() {
         <StatCard value={e.certificate === "Issued" ? "Issued" : "Pending"} label="Certification Status" />
       </div>
 
+      <div className="grid">
+        <StatCard value={typeLabel} label="Current Training" />
+        <StatCard value={`${e.daysCompleted ?? "—"} / ${e.requiredDays ?? "—"}`} label="Days Completed / Required" />
+        <StatCard value={refresher.status === "none" ? "—" : formatDate(refresher.due)} label={refresher.status === "none" ? "Refresher (after initial training)" : `Next Refresher – ${refresher.label}`} />
+      </div>
+
+      {!e.category && <div className="alert warn">Your mine category is not set yet. Ask your manager to set it so the required training days can be shown.</div>}
+      {e.evalStatus === "Additional training required" && (
+        <div className="alert warn">Your score was below the pass mark. Additional training is required before re-evaluation. Your manager will update your record once it is done.</div>
+      )}
+      {e.evalStatus === "Re-evaluation due" && <div className="alert warn">Additional training is complete. You are due for re-evaluation.</div>}
+      {refresher.status === "overdue" && <div className="alert bad">Your refresher training is overdue ({refresher.label.toLowerCase()}). Please contact your manager.</div>}
+      {refresher.status === "soon" && <div className="alert warn">Your refresher training is {refresher.label.toLowerCase()}.</div>}
+
       <div className="card mt-22">
         <div className="section-title"><h2>My Training Tracker</h2></div>
         {rows.map((r) => (
@@ -62,6 +82,27 @@ export default function Dashboard() {
             <div><Pill text={r.status} /></div>
           </div>
         ))}
+      </div>
+
+      <div className="card mt-22">
+        <div className="section-title"><h2>My Training History</h2><span className="muted">{categoryLabel(e)} • {e.grade || "Worker"}</span></div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Training</th><th>Started</th><th>Days</th><th>Progress</th><th>Assessment</th><th>Certificate</th></tr></thead>
+            <tbody>
+              {[...e.trainings].reverse().map((t) => (
+                <tr key={t.id}>
+                  <td><strong>{TRAINING_TYPES.find((x) => x.key === t.type)?.short}</strong></td>
+                  <td>{formatDate(t.startDate)}</td>
+                  <td>{t.daysCompleted ?? "—"} / {t.requiredDays ?? "—"}</td>
+                  <td>{t.progress}%</td>
+                  <td>{t.score === null || t.score === undefined ? "Not attempted" : `${t.score}% – ${t.evalStatus}`}</td>
+                  <td><Pill text={t.certificate} />{t.certNo && <div className="admin-row-meta">{t.certNo}</div>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="notice">

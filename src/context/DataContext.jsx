@@ -2,11 +2,12 @@ import { createContext, useCallback, useContext, useMemo } from "react";
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from "../constants/config";
 import { defaultQuestions } from "../data/defaultQuestions";
 import { seedCirculars } from "../data/seedCirculars";
-import { seedEmployees } from "../data/seedEmployees";
+import { buildSeedEmployees } from "../data/seedEmployees";
 import { seedManagers } from "../data/seedManagers";
 import usePersistentState from "../hooks/usePersistentState";
 import { setActiveSettings } from "../utils/settings";
-import { clone, isDuplicate, today, withCertificate } from "../utils/training";
+import { clone, isDuplicate } from "../utils/training";
+import { activeTraining, finalize, newTraining, patchTraining } from "../utils/trainingRecords";
 
 const DataContext = createContext(null);
 
@@ -22,7 +23,7 @@ export function DataProvider({ children }) {
   setActiveSettings(settings);
 
   const [employees, setEmployees] = usePersistentState(STORAGE_KEYS.employees, (saved) =>
-    (Array.isArray(saved) ? saved : clone(seedEmployees)).map(withCertificate)
+    finalize(Array.isArray(saved) ? saved : buildSeedEmployees())
   );
   const [questions, setQuestions] = usePersistentState(STORAGE_KEYS.questions, (saved) =>
     Array.isArray(saved) && saved.length ? saved : clone(defaultQuestions)
@@ -35,7 +36,7 @@ export function DataProvider({ children }) {
   );
 
   /* ---------- employees ---------- */
-  const addEmployee = useCallback((emp) => setEmployees((list) => [...list, withCertificate(emp)]), [setEmployees]);
+  const addEmployee = useCallback((emp) => setEmployees((list) => finalize([...list, emp])), [setEmployees]);
 
   // Adds only valid, non-duplicate rows. Returns { added, skipped }.
   const addEmployees = useCallback(
@@ -48,18 +49,18 @@ export function DataProvider({ children }) {
           skipped++;
           return;
         }
-        next.push(withCertificate(e));
+        next.push({ ...e, trainings: e.trainings || [newTraining("Initial", e.joining || "")] });
         added++;
       });
-      setEmployees(next);
+      setEmployees(finalize(next));
       return { added, skipped };
     },
     [employees, setEmployees]
   );
 
+  // Profile fields only. Training data goes through updateTraining.
   const updateEmployee = useCallback(
-    (id, patch) =>
-      setEmployees((list) => list.map((e) => (e.id === id ? withCertificate({ ...e, ...patch }) : e))),
+    (id, patch) => setEmployees((list) => finalize(list.map((e) => (e.id === id ? { ...e, ...patch } : e)))),
     [setEmployees]
   );
 
@@ -76,9 +77,40 @@ export function DataProvider({ children }) {
     [setEmployees]
   );
 
+  /* ---------- training records (several per employee; the latest one is the active one) ---------- */
+  const addTraining = useCallback(
+    (empId, training) =>
+      setEmployees((list) => finalize(list.map((e) => (e.id === empId ? { ...e, trainings: [...(e.trainings || []), training] } : e)))),
+    [setEmployees]
+  );
+
+  const updateTraining = useCallback(
+    (empId, trainingId, patch) =>
+      setEmployees((list) =>
+        finalize(list.map((e) => (e.id === empId ? { ...e, trainings: e.trainings.map((t) => (t.id === trainingId ? patchTraining(t, patch) : t)) } : e)))
+      ),
+    [setEmployees]
+  );
+
+  const deleteTraining = useCallback(
+    (empId, trainingId) =>
+      setEmployees((list) =>
+        finalize(list.map((e) => (e.id === empId && e.trainings.length > 1 ? { ...e, trainings: e.trainings.filter((t) => t.id !== trainingId) } : e)))
+      ),
+    [setEmployees]
+  );
+
+  // Online assessment result for the employee's active training.
   const submitAssessment = useCallback(
-    (id, score) => updateEmployee(id, { score, assessmentDate: today() }),
-    [updateEmployee]
+    (id, score) =>
+      setEmployees((list) =>
+        finalize(list.map((e) => {
+          if (e.id !== id) return e;
+          const active = activeTraining(e);
+          return { ...e, trainings: e.trainings.map((t) => (t.id === active.id ? patchTraining(t, { score }) : t)) };
+        }))
+      ),
+    [setEmployees]
   );
 
   /* ---------- questions ---------- */
@@ -111,8 +143,13 @@ export function DataProvider({ children }) {
 
   /* ---------- settings / backup ---------- */
   const updateSettings = useCallback(
-    (patch) => setSettings((s) => mergeSettings({ ...s, ...patch, admin: { ...s.admin, ...(patch.admin || {}) } })),
-    [setSettings]
+    (patch) => {
+      const next = mergeSettings({ ...settings, ...patch, admin: { ...settings.admin, ...(patch.admin || {}) } });
+      setActiveSettings(next); // pass mark etc. must be current before certificates are re-derived
+      setSettings(next);
+      setEmployees((list) => finalize(list));
+    },
+    [settings, setSettings, setEmployees]
   );
 
   const exportBackup = useCallback(
@@ -124,7 +161,7 @@ export function DataProvider({ children }) {
   const restoreBackup = useCallback(
     (data) => {
       if (!data || !Array.isArray(data.employees) || !Array.isArray(data.questions)) return "This is not a valid backup file.";
-      setEmployees(data.employees.map(withCertificate));
+      setEmployees(finalize(data.employees));
       if (data.questions.length) setQuestions(data.questions);
       if (Array.isArray(data.managers)) setManagers(data.managers);
       if (Array.isArray(data.circulars)) setCirculars(data.circulars);
@@ -135,7 +172,7 @@ export function DataProvider({ children }) {
   );
 
   const resetAllData = useCallback(() => {
-    setEmployees(clone(seedEmployees).map(withCertificate));
+    setEmployees(finalize(buildSeedEmployees()));
     setQuestions(clone(defaultQuestions));
     setManagers(clone(seedManagers));
     setCirculars(clone(seedCirculars));
@@ -144,7 +181,7 @@ export function DataProvider({ children }) {
   const value = useMemo(
     () => ({
       settings, employees, questions, managers, circulars,
-      addEmployee, addEmployees, updateEmployee, toggleEmployeeStatus, deleteEmployee, submitAssessment,
+      addEmployee, addEmployees, updateEmployee, toggleEmployeeStatus, deleteEmployee, addTraining, updateTraining, deleteTraining, submitAssessment,
       addQuestion, updateQuestion, deleteQuestion, resetQuestions,
       addManager, updateManager, deleteManager,
       addCircular, updateCircular, deleteCircular,
@@ -152,7 +189,7 @@ export function DataProvider({ children }) {
     }),
     [
       settings, employees, questions, managers, circulars,
-      addEmployee, addEmployees, updateEmployee, toggleEmployeeStatus, deleteEmployee, submitAssessment,
+      addEmployee, addEmployees, updateEmployee, toggleEmployeeStatus, deleteEmployee, addTraining, updateTraining, deleteTraining, submitAssessment,
       addQuestion, updateQuestion, deleteQuestion, resetQuestions,
       addManager, updateManager, deleteManager,
       addCircular, updateCircular, deleteCircular,

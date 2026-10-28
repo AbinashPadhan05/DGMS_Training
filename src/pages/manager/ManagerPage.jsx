@@ -1,4 +1,5 @@
 import AdminStats from "../../components/admin/AdminStats";
+import CertificateRegister from "../../components/admin/CertificateRegister";
 import EmployeeManagement from "../../components/admin/EmployeeManagement";
 import TrainingStatusCard from "../../components/admin/TrainingStatusCard";
 import { useData } from "../../context/DataContext";
@@ -18,6 +19,7 @@ export default function ManagerPage() {
 
       <AdminStats employees={employees} />
       <TrainingStatusCard />
+      <CertificateRegister />
       <EmployeeManagement />
     </section>
   );

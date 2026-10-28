@@ -1,7 +1,10 @@
+import { today } from "./dates";
+import { deriveEmployee, refresherInfo } from "./trainingRecords";
 import { getPassMark } from "./settings";
 
+export { today };
+
 export const clone = (x) => JSON.parse(JSON.stringify(x));
-export const today = () => new Date().toISOString().slice(0, 10);
 
 export const hasScore = (e) => e.score !== null && e.score !== undefined && e.score !== "";
 export const isPassed = (e) => hasScore(e) && Number(e.score) >= getPassMark();
@@ -12,21 +15,15 @@ export function assessmentLabel(e) {
   return isPassed(e) ? `Passed (${Number(e.score)}%)` : `Failed (${Number(e.score)}%)`;
 }
 
-// Certificate is issued automatically: assessment passed + practical + OJT completed.
-export function withCertificate(e) {
-  const eligible = isPassed(e) && e.practical === "Completed" && e.ojt === "Completed";
-  return {
-    ...e,
-    certificate: eligible ? "Issued" : "Pending",
-    certDate: eligible ? e.certDate || today() : "",
-  };
-}
+// Derives certificate, progress and the active training record (see trainingRecords.js).
+export const withCertificate = deriveEmployee;
 
 export function pillKind(text) {
   const t = text || "Pending";
-  if (["Completed", "Issued"].includes(t) || t.startsWith("Passed")) return "ok";
+  if (["Completed", "Issued", "Up to date"].includes(t) || t.startsWith("Passed")) return "ok";
   if (t.startsWith("Failed")) return "bad";
-  if (t === "In Progress") return "warn";
+  if (["In Progress", "Due soon", "Additional training required", "Re-evaluation due"].includes(t) || t.startsWith("Due in")) return "warn";
+  if (t.startsWith("Overdue")) return "bad";
   return "";
 }
 
@@ -53,6 +50,9 @@ export function filterEmployees(list, search, filter, type = "all") {
       case "ojt": return e.ojt !== "Completed";
       case "certificate": return e.certificate === "Issued";
       case "inactive": return e.status === "Inactive";
+      case "refresherDue": return ["soon", "overdue"].includes(refresherInfo(e).status);
+      case "refresherOverdue": return refresherInfo(e).status === "overdue";
+      case "reeval": return e.evalStatus === "Additional training required" || e.evalStatus === "Re-evaluation due";
       default: return true;
     }
   });
@@ -71,5 +71,9 @@ export function computeStats(employees) {
     practical: count((e) => e.practical === "Completed"),
     ojt: count((e) => e.ojt === "Completed"),
     certPending: count((e) => e.certificate !== "Issued"),
+    refresherSoon: count((e) => refresherInfo(e).status === "soon"),
+    refresherOverdue: count((e) => refresherInfo(e).status === "overdue"),
+    reeval: count((e) => e.evalStatus === "Additional training required" || e.evalStatus === "Re-evaluation due"),
+    categoryMissing: count((e) => !e.category),
   };
 }

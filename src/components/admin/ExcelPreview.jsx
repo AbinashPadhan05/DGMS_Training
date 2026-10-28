@@ -1,3 +1,4 @@
+import { CATEGORIES } from "../../constants/training";
 import { isDuplicate } from "../../utils/training";
 
 const COLUMNS = [
@@ -6,6 +7,8 @@ const COLUMNS = [
   { key: "department", label: "Department" },
   { key: "designation", label: "Designation" },
   { key: "type", label: "Type" },
+  { key: "category", label: "Mine Category", render: (e) => CATEGORIES.find((c) => c.key === e.category)?.label },
+  { key: "grade", label: "Grade" },
   { key: "mine", label: "Mine / Site" },
   { key: "course", label: "Training Programme" },
   { key: "username", label: "Username" },
@@ -36,7 +39,7 @@ export default function ExcelPreview({ rows, existing, onConfirm, onCancel }) {
           <tbody>
             {validated.map(({ e, label }, i) => (
               <tr key={i}>
-                {COLUMNS.map((c) => <td key={c.key}>{e[c.key] || "—"}</td>)}
+                {COLUMNS.map((c) => <td key={c.key}>{(c.render ? c.render(e) : e[c.key]) || "—"}</td>)}
                 <td>{label}</td>
               </tr>
             ))}

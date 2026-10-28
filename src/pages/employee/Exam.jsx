@@ -87,6 +87,17 @@ export default function Exam({ onNavigate }) {
         <button className="btn" onClick={() => onNavigate("dashboard")}>View My Training Status</button>
       </div>
     );
+  } else if (employee.evalStatus === "Additional training required") {
+    body = (
+      <div className="card">
+        <h3>Additional training required</h3>
+        <p className="muted">
+          Your last score ({Number(employee.score)}%) was below the pass mark of {getPassMark()}%. Additional training must be
+          completed before you are re-evaluated. Your manager will update your record when it is done.
+        </p>
+        <button className="btn" onClick={() => onNavigate("dashboard")}>View My Training Status</button>
+      </div>
+    );
   } else if (hasScore(employee) && !retake) {
     body = <Result employee={employee} onRetake={() => setRetake(true)} onNavigate={onNavigate} />;
   } else {

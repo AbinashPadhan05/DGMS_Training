@@ -1,3 +1,4 @@
+import CertificateRegister from "../../components/admin/CertificateRegister";
 import EmployeeManagement from "../../components/admin/EmployeeManagement";
 import TrainingStatusCard from "../../components/admin/TrainingStatusCard";
 
@@ -12,6 +13,7 @@ export default function EmployeesPage() {
       </div>
       <EmployeeManagement />
       <TrainingStatusCard canDelete canEditProfile />
+      <CertificateRegister />
     </section>
   );
 }

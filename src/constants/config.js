@@ -10,6 +10,8 @@ export const STORAGE_KEYS = {
 // Demo only. Real authentication must be done on a server.
 export const DEFAULT_SETTINGS = {
   passMark: 40,
+  // The circular does not state the refresher interval (Rule 159 does). Confirm and set it in Settings.
+  refresherMonths: 60,
   defaultCourse: "General Mine Safety",
   defaultPassword: "Welcome@123",
   admin: { name: "MineMagma Administrator", username: "admin", password: "admin123" },
@@ -33,5 +35,8 @@ export const EMPLOYEE_FILTERS = [
   { value: "practical", label: "Practical Pending" },
   { value: "ojt", label: "OJT Pending" },
   { value: "certificate", label: "Certificate Issued" },
+  { value: "reeval", label: "Additional Training / Re-evaluation" },
+  { value: "refresherDue", label: "Refresher Due / Overdue" },
+  { value: "refresherOverdue", label: "Refresher Overdue" },
   { value: "inactive", label: "Inactive Employees" },
 ];

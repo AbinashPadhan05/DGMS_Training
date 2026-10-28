@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { EMPLOYEE_FILTERS } from "../../constants/config";
 import { useData } from "../../context/DataContext";
-import { downloadTrainingReportPDF } from "../../utils/pdfReport";
+import { downloadCertificateRegisterPDF, downloadTrainingReportPDF } from "../../utils/pdfReport";
 import { filterEmployees, today } from "../../utils/training";
 
 const REPORTS = {
@@ -10,6 +10,9 @@ const REPORTS = {
   pendingAssessment: { label: "Assessment Pending / Failed", filter: "pending" },
   pendingPractical: { label: "Practical Pending", filter: "practical" },
   pendingOjt: { label: "OJT Pending", filter: "ojt" },
+  reeval: { label: "Additional Training / Re-evaluation Pending", filter: "reeval" },
+  refresher: { label: "Refresher Due / Overdue", filter: "refresherDue" },
+  register: { label: "Certificate Register", filter: null, register: true },
 };
 
 export default function ReportsPage() {
@@ -31,6 +34,10 @@ export default function ReportsPage() {
     setBusy(true);
     try {
       const filterLabel = EMPLOYEE_FILTERS.find((f) => f.value === (REPORTS[report].filter || status))?.label;
+      if (REPORTS[report].register) {
+        await downloadCertificateRegisterPDF(rows, { subtitle: [type === "all" ? "All employee types" : `${type} employees`, course === "all" ? "All courses" : course].join(" | "), fileName: `MineMagma_certificate_register_${type}_${today()}.pdf` });
+        return;
+      }
       await downloadTrainingReportPDF(rows, {
         title: REPORTS[report].label,
         subtitle: [type === "all" ? "All employee types" : `${type} employees`, course === "all" ? "All courses" : course, filterLabel !== "All Status" && filterLabel].filter(Boolean).join(" | "),
@@ -78,7 +85,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <label className="muted" htmlFor="rp-status">Status</label>
-            <select id="rp-status" className="admin-input" value={REPORTS[report].filter || status} disabled={!!REPORTS[report].filter} onChange={(e) => setStatus(e.target.value)}>
+            <select id="rp-status" className="admin-input" value={REPORTS[report].filter || status} disabled={!!REPORTS[report].filter || !!REPORTS[report].register} onChange={(e) => setStatus(e.target.value)}>
               {EMPLOYEE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
             </select>
           </div>

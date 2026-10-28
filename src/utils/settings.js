@@ -8,3 +8,4 @@ export const setActiveSettings = (s) => { active = s; };
 export const getPassMark = () => Number(active.passMark) || DEFAULT_SETTINGS.passMark;
 export const getDefaultCourse = () => active.defaultCourse || DEFAULT_SETTINGS.defaultCourse;
 export const getDefaultPassword = () => active.defaultPassword || DEFAULT_SETTINGS.defaultPassword;
+export const getRefresherMonths = () => Number(active.refresherMonths) || DEFAULT_SETTINGS.refresherMonths;

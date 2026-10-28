@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { EMPLOYEE_TYPES } from "../../constants/config";
+import { CATEGORIES, GRADES } from "../../constants/training";
 import { useData } from "../../context/DataContext";
 import { getDefaultCourse, getDefaultPassword } from "../../utils/settings";
 import { idExists, typeOf, usernameExists } from "../../utils/training";
+import { newTraining } from "../../utils/trainingRecords";
 
 const FIELDS = [
   { key: "id", label: "Employee ID *", placeholder: "EMP-006" },
@@ -19,7 +21,7 @@ const FIELDS = [
 
 const blank = () => ({
   id: "", name: "", department: "", designation: "", mine: "", email: "", mobile: "",
-  joining: "", type: "Regular", contractor: "", course: getDefaultCourse(),
+  joining: "", type: "Regular", contractor: "", category: "", grade: "Worker", highlySkilled: false, course: getDefaultCourse(),
   username: "", password: getDefaultPassword(), status: "Active",
 });
 
@@ -51,6 +53,9 @@ export default function EmployeeForm({ employee, onClose }) {
       mobile: form.mobile.trim(),
       joining: form.joining,
       type: form.type,
+      category: form.category,
+      grade: form.grade,
+      highlySkilled: !!form.highlySkilled,
       contractor: form.type === "Contractual" ? form.contractor.trim() : "",
       course: form.course.trim() || getDefaultCourse(),
       status: form.status || "Active",
@@ -59,7 +64,7 @@ export default function EmployeeForm({ employee, onClose }) {
     if (editing) {
       updateEmployee(employee.id, data);
     } else {
-      addEmployee({ id, ...data, progress: 0, score: null, practical: "Pending", ojt: "Pending", certificate: "Pending" });
+      addEmployee({ id, ...data, trainings: [newTraining("Initial", form.joining || "")] });
     }
     onClose();
     alert(editing ? "Employee updated." : "Employee added successfully.");
@@ -95,6 +100,26 @@ export default function EmployeeForm({ employee, onClose }) {
             <input id="emp-contractor" className="admin-input" placeholder="Contractor name" value={form.contractor} onChange={set("contractor")} />
           </div>
         )}
+        <div>
+          <label className="muted" htmlFor="emp-category">Mine Category (DGMS circular)</label>
+          <select id="emp-category" className="admin-input" value={form.category} onChange={set("category")}>
+            <option value="">— Select —</option>
+            {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="muted" htmlFor="emp-grade">Grade</label>
+          <select id="emp-grade" className="admin-input" value={form.grade} onChange={set("grade")}>
+            {GRADES.map((g) => <option key={g}>{g}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="muted" htmlFor="emp-skilled">Highly skilled category</label>
+          <label className="check-row" htmlFor="emp-skilled">
+            <input id="emp-skilled" type="checkbox" checked={!!form.highlySkilled} onChange={(e) => setForm((f) => ({ ...f, highlySkilled: e.target.checked }))} />
+            HEMM / driver / blasting / drill – practical field test required
+          </label>
+        </div>
         <div>
           <label className="muted" htmlFor="emp-course">Training Programme</label>
           <input id="emp-course" className="admin-input" list="course-options" value={form.course} onChange={set("course")} />

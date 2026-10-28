@@ -25,6 +25,18 @@ npm run preview    # preview the production build
 - Employees are **Regular** or **Contractual** (tabs, filters, reports). Reports download as **PDF only**.
 - If hosted statically, configure the server to serve `index.html` for `/admin` (SPA fallback).
 
+## Training compliance tracking (DGMS Circular 01/2026)
+
+The site tracks training; it does not deliver it.
+
+- **Mine category** per employee (Aboveground, Opencast, Underground, Gassy UG, Onshore/Offshore Oil) gives the minimum days from the circular's table (`src/constants/training.js`).
+- **Training records:** an employee can have several (Initial, Refresher, Special, After absence/accident/job change, Other). The newest is the active one.
+- **Fail flow:** below the pass mark -> additional training (2 days after initial, 1 after refresher) -> re-evaluation. Employees cannot re-attempt the online test until the additional days are recorded.
+- **Practical field test** for highly skilled categories (required before the certificate).
+- **Refresher due dates** (due in 30 days / overdue) on dashboards, tables, filters and PDF reports. The interval is a setting (Admin -> Settings); the circular does not state it, so confirm the value.
+- **Certificates** carry the training type, category, dates and a serial number; a **Certificate Register** (PDF) lists them.
+- Old data is migrated automatically: each existing employee becomes one Initial training record. Set their mine category to get the required days.
+
 ## Folder structure
 
 ```
