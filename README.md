@@ -37,6 +37,17 @@ The site tracks training; it does not deliver it.
 - **Certificates** carry the training type, category, dates and a serial number; a **Certificate Register** (PDF) lists them.
 - Old data is migrated automatically: each existing employee becomes one Initial training record. Set their mine category to get the required days.
 
+### Records, retention and audit
+
+- **Attendance register** per training record (day-wise Present / Half day / Absent / Leave, range entry skips Sundays). When used, days completed are calculated from it.
+- **Training log:** sessions with module, topic, trainer and hours. Warns when an OJT session has a trainer who is not an authorized OJT trainer.
+- **Trainers register** (training officer, instructors, authorized OJT trainers), shown to manager and admin.
+- **Archive instead of delete:** archived employees keep their records, cannot log in, and show "retain until" = leaving date + 5 years. Permanent delete (admin) is blocked until then, except for records created by mistake.
+- **Retraining triggers:** one click creates a 3-day-minimum record for absence over 1 year, accident, job change or new technology.
+- **Documents:** demo only, the file name/type/size are stored, not the file.
+- **Audit log** (admin, Audit & Compliance): every change with user and time, PDF export.
+- **PDFs:** inspection report (all training records), single employee record, trainers register, audit log, certificate register.
+
 ## Folder structure
 
 ```

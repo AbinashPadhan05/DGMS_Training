@@ -12,9 +12,11 @@ export const ADMIN_NAV = [
   { page: "overview", icon: "📊", label: "Overview" },
   { page: "employees", icon: "👥", label: "Employees" },
   { page: "managers", icon: "🧑‍💼", label: "Managers" },
+  { page: "trainers", icon: "🧑‍🏫", label: "Trainers" },
   { page: "circulars", icon: "📚", label: "Circulars & Syllabus" },
   { page: "questions", icon: "❓", label: "Question Bank" },
   { page: "reports", icon: "📄", label: "Reports (PDF)" },
+  { page: "audit", icon: "🔍", label: "Audit & Compliance" },
   { page: "settings", icon: "⚙️", label: "Settings" },
 ];
 

@@ -51,7 +51,7 @@ table { width: 100%; border-collapse: collapse; }
 .table-wrap td, .table-wrap th { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; white-space: nowrap; }
 .progress-cell { min-width: 130px; }
 .empty-row { text-align: center; padding: 25px !important; color: #777; }
-.employee-actions { display: flex; gap: 6px; }
+.employee-actions { display: flex; gap: 6px; flex-wrap: wrap; min-width: 280px; }
 .excel-preview { margin-top: 18px; }
 
 /* pills / notices */
@@ -103,3 +103,11 @@ table { width: 100%; border-collapse: collapse; }
 .alert.bad { background: #fbe3e0; border: 1px solid #f0c9c3; color: #8a1f15; }
 .alert.ok { background: #e4f2e9; border: 1px solid #cfe2d6; color: #17633c; }
 @media (max-width: 900px) { .parts { grid-template-columns: 1fr 1fr; } .rec-row { grid-template-columns: 1fr; } .kv { grid-template-columns: 1fr; } }
+
+/* round 2 additions */
+.scroll-box { max-height: 280px; }
+.sub { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-top: 12px; background: #fff; }
+.sub > summary { cursor: pointer; font-weight: 700; }
+.sub[open] > summary { margin-bottom: 10px; }
+.trigger-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.scroll-box.tall { max-height: 460px; }

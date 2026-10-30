@@ -37,7 +37,9 @@ export const typeOf = (e) => (e.type === "Contractual" ? "Contractual" : "Regula
 
 export function filterEmployees(list, search, filter, type = "all") {
   const q = search.trim().toLowerCase();
+  const wantArchived = filter === "archived";
   return list.filter((e) => {
+    if (!!e.archived !== wantArchived) return false;
     if (type !== "all" && typeOf(e) !== type) return false;
     if (q && !`${e.name || ""} ${e.id || ""} ${e.department || ""}`.toLowerCase().includes(q)) return false;
     const p = progressOf(e);
@@ -58,10 +60,12 @@ export function filterEmployees(list, search, filter, type = "all") {
   });
 }
 
-export function computeStats(employees) {
+export function computeStats(all) {
+  const employees = all.filter((e) => !e.archived);
   const count = (fn) => employees.filter(fn).length;
   return {
     total: employees.length,
+    archived: all.length - employees.length,
     regular: count((e) => typeOf(e) === "Regular"),
     contractual: count((e) => typeOf(e) === "Contractual"),
     completed: count((e) => progressOf(e) >= 100),

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { STORAGE_KEYS } from "../constants/config";
+import { setAuditActor } from "../utils/audit";
 import { loadJSON, saveJSON } from "../utils/storage";
 import { useData } from "./DataContext";
 
@@ -12,9 +13,12 @@ export function AuthProvider({ children }) {
     const saved = loadJSON(STORAGE_KEYS.session, sessionStorage);
     if (saved?.role === "admin") return saved;
     if (saved?.role === "manager" && managers.some((x) => x.id === saved.id && x.status !== "Inactive")) return saved;
-    if (saved?.role === "employee" && employees.some((x) => x.id === saved.id && x.status !== "Inactive")) return saved;
+    if (saved?.role === "employee" && employees.some((x) => x.id === saved.id && x.status !== "Inactive" && !x.archived)) return saved;
     return null;
   });
+
+  // Every change in the data layer is logged against the signed-in user.
+  setAuditActor(user);
 
   // role: "employee" | "manager" | "admin". Returns an error message, or null on success.
   const login = useCallback(
@@ -35,6 +39,7 @@ export function AuthProvider({ children }) {
       } else {
         const emp = employees.find(matches);
         if (!emp) return "Invalid username or password.";
+        if (emp.archived) return "This account is archived. Please contact the administrator.";
         if (emp.status === "Inactive") return "This account is inactive. Please contact the administrator.";
         session = { role: "employee", name: emp.name, id: emp.id };
       }

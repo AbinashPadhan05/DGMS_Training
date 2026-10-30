@@ -38,3 +38,16 @@ export const ADDITIONAL_TRAINING_DAYS = { Initial: 2, Refresher: 1 };
 
 export const GRADES = ["Worker", "Supervisory", "Managerial"];
 export const FIELD_TEST_STATUSES = ["Pending", "Passed", "Failed"];
+
+/* ---------- Round 2: records, attendance, trainers, retention ---------- */
+export const ATTENDANCE_STATUSES = [
+  { key: "Present", days: 1 },
+  { key: "Half day", days: 0.5 },
+  { key: "Absent", days: 0 },
+  { key: "Leave", days: 0 },
+];
+export const SESSION_PARTS = ["Introductory", "General Safety", "Trade / Discipline specific", "On-the-Job Training", "Assessment", "Refresher", "Special / other"];
+export const DOCUMENT_TYPES = ["Attendance sheet", "Assessment sheet", "Certificate scan", "Trainer appointment", "Other"];
+export const TRAINER_ROLES = ["Training Officer", "Instructor", "Trainer", "OJT Trainer (authorized)", "Supervisor"];
+// Circular section 5.0: keep records for the whole service and at least 5 years after.
+export const RETENTION_YEARS = 5;

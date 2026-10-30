@@ -26,6 +26,7 @@ export default function AdminStats({ employees }) {
       <div className="grid four">
         <StatCard value={s.refresherSoon} label="Refresher Due in 30 Days" />
         <StatCard value={s.refresherOverdue} label="Refresher Overdue" />
+        <StatCard value={s.archived} label="Archived (Retained)" />
       </div>
     </>
   );

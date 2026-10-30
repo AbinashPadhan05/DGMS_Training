@@ -1,24 +1,26 @@
 import { useMemo, useState } from "react";
 import { EMPLOYEE_FILTERS } from "../../constants/config";
 import { useData } from "../../context/DataContext";
-import { downloadTrainingReportPDF } from "../../utils/pdfReport";
+import { downloadEmployeeRecordPDF, downloadTrainingReportPDF } from "../../utils/pdfReport";
 import { assessmentLabel, filterEmployees, progressOf } from "../../utils/training";
 import Pill from "../common/Pill";
 import TypePill from "../common/TypePill";
 import EmployeeForm from "./EmployeeForm";
 import TrainingPanel from "./TrainingPanel";
 import { TRAINING_TYPES } from "../../constants/training";
-import { formatDate } from "../../utils/dates";
-import { categoryLabel, refresherInfo } from "../../utils/trainingRecords";
+import { formatDate, today } from "../../utils/dates";
+import { categoryLabel, refresherInfo, retentionInfo } from "../../utils/trainingRecords";
 
 // canDelete / canEditProfile are enabled only in the Admin panel.
 export default function TrainingStatusCard({ canDelete = false, canEditProfile = false }) {
-  const { employees, toggleEmployeeStatus, deleteEmployee } = useData();
+  const { employees, trainers, toggleEmployeeStatus, archiveEmployee, restoreEmployee, deleteEmployee } = useData();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [typeTab, setTypeTab] = useState("all");
   const [editingId, setEditingId] = useState(null);
   const [profileId, setProfileId] = useState(null);
+  const [archiveFor, setArchiveFor] = useState(null); // { id, leavingDate, reason }
+  const liveCount = (type) => employees.filter((e) => !e.archived && (type === "all" || (e.type === "Contractual" ? "Contractual" : "Regular") === type)).length;
 
   const list = useMemo(() => filterEmployees(employees, search, filter, typeTab), [employees, search, filter, typeTab]);
   const editing = employees.find((e) => e.id === editingId);
@@ -31,9 +33,17 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
   };
 
   const handleDelete = (e) => {
-    if (!window.confirm(`Delete employee ${e.name} (${e.id})?`)) return;
-    deleteEmployee(e.id);
+    if (!window.confirm(`Permanently delete ${e.name} (${e.id})? This cannot be undone.`)) return;
+    const err = deleteEmployee(e.id);
+    if (err) { alert(err); return; }
     if (editingId === e.id) setEditingId(null);
+  };
+
+  const confirmArchive = () => {
+    if (!archiveFor.leavingDate) { alert("Enter the date the employee left service (or today's date)."); return; }
+    archiveEmployee(archiveFor.id, { leavingDate: archiveFor.leavingDate, reason: archiveFor.reason.trim() });
+    if (editingId === archiveFor.id) setEditingId(null);
+    setArchiveFor(null);
   };
 
   return (
@@ -53,7 +63,7 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
       <div className="segmented mb-16">
         {[["all", "All"], ["Regular", "Regular"], ["Contractual", "Contractual"]].map(([value, label]) => (
           <button key={value} className={typeTab === value ? "active" : ""} onClick={() => setTypeTab(value)}>
-            {label} ({value === "all" ? employees.length : employees.filter((e) => (e.type === "Contractual" ? "Contractual" : "Regular") === value).length})
+            {label} ({liveCount(value)})
           </button>
         ))}
       </div>
@@ -97,11 +107,12 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
                 <tr key={e.id}>
                   <td>
                     <strong>{e.name}</strong>
-                    {e.status === "Inactive" && <> <span className="pill bad">Inactive</span></>}
+                    {e.archived ? <> <span className="pill bad">Archived</span></> : e.status === "Inactive" && <> <span className="pill bad">Inactive</span></>}
                     <div className="admin-row-meta">
                       {e.designation || ""}{e.department ? ` • ${e.department}` : ""}
                     </div>
                     <div className="admin-row-meta">{e.grade || "Worker"} • {categoryLabel(e)}{e.highlySkilled ? " • Highly skilled" : ""}</div>
+                    {e.archived && <div className="admin-row-meta">Left {formatDate(e.archived.leavingDate)} • {retentionInfo(e).label}</div>}
                   </td>
                   <td>{e.id}</td>
                   <td>
@@ -138,10 +149,16 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
                   <td>
                     <div className="employee-actions">
                       <button className="btn" onClick={() => setEditingId(e.id)}>Training</button>
-                      <button className="btn secondary" onClick={() => toggleEmployeeStatus(e.id)}>
-                        {e.status === "Inactive" ? "Activate" : "Deactivate"}
-                      </button>
-                      {canEditProfile && <button className="btn secondary" onClick={() => setProfileId(e.id)}>Edit Profile</button>}
+                      {!e.archived && (
+                        <button className="btn secondary" onClick={() => toggleEmployeeStatus(e.id)}>
+                          {e.status === "Inactive" ? "Activate" : "Deactivate"}
+                        </button>
+                      )}
+                      {canEditProfile && !e.archived && <button className="btn secondary" onClick={() => setProfileId(e.id)}>Edit Profile</button>}
+                      <button className="btn secondary" onClick={() => downloadEmployeeRecordPDF(e, trainers)}>📄 Record</button>
+                      {e.archived
+                        ? <button className="btn secondary" onClick={() => restoreEmployee(e.id)}>Restore</button>
+                        : <button className="btn secondary" onClick={() => setArchiveFor({ id: e.id, leavingDate: today(), reason: "" })}>Archive</button>}
                       {canDelete && <button className="btn danger" onClick={() => handleDelete(e)}>Delete</button>}
                     </div>
                   </td>
@@ -151,6 +168,21 @@ export default function TrainingStatusCard({ canDelete = false, canEditProfile =
           </tbody>
         </table>
       </div>
+
+      {archiveFor && (
+        <div className="panel open">
+          <h3>Archive {employees.find((x) => x.id === archiveFor.id)?.name}</h3>
+          <div className="muted">The employee is removed from the working lists and can no longer log in. Training records are kept for the whole service and 5 years after the leaving date.</div>
+          <div className="grid cols-3 mt-12">
+            <div><label className="muted" htmlFor="ar-date">Date left service</label><input id="ar-date" type="date" className="admin-input" value={archiveFor.leavingDate} onChange={(e) => setArchiveFor((a) => ({ ...a, leavingDate: e.target.value }))} /></div>
+            <div><label className="muted" htmlFor="ar-reason">Reason</label><input id="ar-reason" className="admin-input" placeholder="Retired / resigned / transferred…" value={archiveFor.reason} onChange={(e) => setArchiveFor((a) => ({ ...a, reason: e.target.value }))} /></div>
+          </div>
+          <div className="row-gap mt-12">
+            <button className="btn" onClick={confirmArchive}>Archive employee</button>
+            <button className="btn secondary" onClick={() => setArchiveFor(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {profile && <EmployeeForm key={profile.id} employee={profile} onClose={() => setProfileId(null)} />}
 

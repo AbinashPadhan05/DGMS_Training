@@ -3,6 +3,8 @@ export const STORAGE_KEYS = {
   questions: "mineMagmaQuestions",
   managers: "mineMagmaManagers",
   circulars: "mineMagmaCirculars",
+  trainers: "mineMagmaTrainers",
+  audit: "mineMagmaAudit",
   settings: "mineMagmaSettings",
   session: "mineMagmaSession",
 };
@@ -39,4 +41,5 @@ export const EMPLOYEE_FILTERS = [
   { value: "refresherDue", label: "Refresher Due / Overdue" },
   { value: "refresherOverdue", label: "Refresher Overdue" },
   { value: "inactive", label: "Inactive Employees" },
+  { value: "archived", label: "Archived (retained records)" },
 ];

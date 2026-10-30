@@ -1,6 +1,7 @@
 import Pill from "../../components/common/Pill";
 import StatCard from "../../components/common/StatCard";
 import { getPassMark } from "../../utils/settings";
+import { useData } from "../../context/DataContext";
 import useCurrentEmployee from "../../hooks/useCurrentEmployee";
 import { TRAINING_TYPES } from "../../constants/training";
 import { formatDate } from "../../utils/dates";
@@ -9,7 +10,10 @@ import { categoryLabel, refresherInfo } from "../../utils/trainingRecords";
 
 export default function Dashboard() {
   const e = useCurrentEmployee();
+  const { trainers } = useData();
   if (!e) return null;
+  const activeT = e.trainings[e.trainings.length - 1];
+  const trainerName = (id) => trainers.find((t) => t.id === id)?.name || "—";
 
   const p = progressOf(e);
   const trainingStatus = p >= 100 ? "Completed" : p > 0 ? "In Progress" : "Pending";
@@ -82,6 +86,35 @@ export default function Dashboard() {
             <div><Pill text={r.status} /></div>
           </div>
         ))}
+      </div>
+
+      <div className="card mt-22">
+        <div className="section-title">
+          <h2>My Attendance & Training Log</h2>
+          <span className="muted">{typeLabel} training</span>
+        </div>
+        {(activeT.attendance || []).length === 0 && (activeT.sessions || []).length === 0 ? (
+          <div className="muted">Attendance and sessions will appear here once your manager records them.</div>
+        ) : (
+          <>
+            <div className="muted">
+              Days attended: <strong>{e.daysCompleted ?? 0}</strong> of {e.requiredDays ?? "—"} required
+              {(activeT.documents || []).length ? ` • ${activeT.documents.length} document(s) on file` : ""}
+            </div>
+            {(activeT.sessions || []).length > 0 && (
+              <div className="table-wrap mt-12">
+                <table>
+                  <thead><tr><th>Date</th><th>Module</th><th>Topic</th><th>Trainer</th><th>Hours</th></tr></thead>
+                  <tbody>
+                    {activeT.sessions.map((s) => (
+                      <tr key={s.id}><td>{formatDate(s.date)}</td><td>{s.part}</td><td className="wrap-cell">{s.topic || "—"}</td><td>{trainerName(s.trainerId)}</td><td>{s.hours === "" || s.hours === undefined ? "—" : s.hours}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div className="card mt-22">

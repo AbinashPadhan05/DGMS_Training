@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { EMPLOYEE_FILTERS } from "../../constants/config";
 import { useData } from "../../context/DataContext";
-import { downloadCertificateRegisterPDF, downloadTrainingReportPDF } from "../../utils/pdfReport";
+import { downloadCertificateRegisterPDF, downloadInspectionPDF, downloadTrainingReportPDF } from "../../utils/pdfReport";
 import { filterEmployees, today } from "../../utils/training";
 
 const REPORTS = {
@@ -13,10 +13,12 @@ const REPORTS = {
   reeval: { label: "Additional Training / Re-evaluation Pending", filter: "reeval" },
   refresher: { label: "Refresher Due / Overdue", filter: "refresherDue" },
   register: { label: "Certificate Register", filter: null, register: true },
+  archived: { label: "Archived Employees (retained records)", filter: "archived" },
+  inspection: { label: "Inspection Report (all training records)", filter: null, register: true, inspection: true },
 };
 
 export default function ReportsPage() {
-  const { employees } = useData();
+  const { employees, trainers } = useData();
   const [report, setReport] = useState("status");
   const [type, setType] = useState("all");
   const [course, setCourse] = useState("all");
@@ -34,6 +36,11 @@ export default function ReportsPage() {
     setBusy(true);
     try {
       const filterLabel = EMPLOYEE_FILTERS.find((f) => f.value === (REPORTS[report].filter || status))?.label;
+      if (REPORTS[report].inspection) {
+        // Retained records of archived employees belong in an inspection report.
+        await downloadInspectionPDF(employees.filter((e) => (type === "all" || (e.type === "Contractual" ? "Contractual" : "Regular") === type) && (course === "all" || e.course === course)), trainers);
+        return;
+      }
       if (REPORTS[report].register) {
         await downloadCertificateRegisterPDF(rows, { subtitle: [type === "all" ? "All employee types" : `${type} employees`, course === "all" ? "All courses" : course].join(" | "), fileName: `MineMagma_certificate_register_${type}_${today()}.pdf` });
         return;

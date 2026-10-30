@@ -2,10 +2,11 @@ import AdminStats from "../../components/admin/AdminStats";
 import { useData } from "../../context/DataContext";
 
 export default function OverviewPage({ onNavigate }) {
-  const { employees, managers, circulars, questions } = useData();
+  const { employees, managers, circulars, questions, trainers } = useData();
   const links = [
     ["employees", "👥 Employees", `${employees.length} records`],
     ["managers", "🧑‍💼 Managers", `${managers.length} accounts`],
+    ["trainers", "🧑‍🏫 Trainers", `${trainers.length} registered`],
     ["circulars", "📚 Circulars & Syllabus", `${circulars.length} circulars`],
     ["questions", "❓ Question Bank", `${questions.length} questions`],
   ];

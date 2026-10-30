@@ -1,4 +1,4 @@
-import { ADDITIONAL_TRAINING_DAYS, CATEGORIES, MIN_THREE_DAY_TYPES } from "../constants/training";
+import { ADDITIONAL_TRAINING_DAYS, ATTENDANCE_STATUSES, CATEGORIES, MIN_THREE_DAY_TYPES, RETENTION_YEARS } from "../constants/training";
 import { addMonths, daysBetween, today } from "./dates";
 import { getPassMark, getRefresherMonths } from "./settings";
 
@@ -15,6 +15,7 @@ export function newTraining(type = "Initial", startDate = "", extra = {}) {
     id: newId(), type, startDate, completionDate: "", daysCompleted: null, customDays: null,
     progressManual: 0, score: null, assessmentDate: "", attempts: [], additionalDays: 0,
     practical: "Pending", ojt: "Pending", fieldTest: "Pending", notes: "", certDate: "", certNo: "",
+    attendance: [], sessions: [], documents: [],
     ...extra,
   };
 }
@@ -33,9 +34,18 @@ export function derivePassed(score) {
   return hasNum(score) && Number(score) >= getPassMark();
 }
 
+// Days attended according to the attendance register (null when nothing is recorded).
+export function attendanceDays(t) {
+  const list = t.attendance || [];
+  if (!list.length) return null;
+  return list.reduce((n, a) => n + (ATTENDANCE_STATUSES.find((s) => s.key === a.status)?.days || 0), 0);
+}
+
 export function deriveTraining(e, t) {
   const required = requiredDaysFor(e, t);
-  const days = hasNum(t.daysCompleted) ? Number(t.daysCompleted) : null;
+  // The attendance register, when used, decides the days completed.
+  const fromRegister = attendanceDays(t);
+  const days = fromRegister !== null ? fromRegister : hasNum(t.daysCompleted) ? Number(t.daysCompleted) : null;
   const progress =
     required && days !== null
       ? Math.max(0, Math.min(100, Math.round((days / required) * 100)))
@@ -58,6 +68,11 @@ export function deriveTraining(e, t) {
 
   return {
     ...t,
+    attendance: t.attendance || [],
+    sessions: t.sessions || [],
+    documents: t.documents || [],
+    daysCompleted: days,
+    daysFromRegister: fromRegister !== null,
     requiredDays: required,
     progress,
     evalStatus,
@@ -172,3 +187,26 @@ export function finalize(list) {
   });
 }
 
+
+/* ---------- retention (circular section 5.0) ---------- */
+
+// Archived employees keep their records until 5 years after the service end date.
+export function retentionInfo(e) {
+  if (!e.archived) return { archived: false, label: `Service period + ${RETENTION_YEARS} years`, until: "", purgeable: false };
+  const until = e.archived.retainUntil || addMonths(e.archived.leavingDate || e.archived.date, RETENTION_YEARS * 12);
+  return { archived: true, label: `Retain until ${until}`, until, purgeable: !!until && until <= today() };
+}
+
+export const retainUntilFor = (leavingDate) => addMonths(leavingDate, RETENTION_YEARS * 12);
+
+// Permanent deletion is only allowed for records made by mistake (nothing recorded) or after the retention period.
+export function canPurge(e) {
+  const empty = (e.trainings || []).every(
+    (t) => !t.attendance?.length && !t.sessions?.length && !t.documents?.length && (t.score === null || t.score === undefined) && t.certificate !== "Issued"
+  ) && (e.trainings || []).length <= 1;
+  if (empty) return { ok: true };
+  const r = retentionInfo(e);
+  if (!r.archived) return { ok: false, reason: "Training records must be kept for the whole service and 5 years after it. Archive the employee instead of deleting." };
+  if (!r.purgeable) return { ok: false, reason: `Records must be retained until ${r.until}. They cannot be deleted before that date.` };
+  return { ok: true };
+}

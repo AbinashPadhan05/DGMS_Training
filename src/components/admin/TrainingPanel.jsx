@@ -6,6 +6,7 @@ import { formatDate, today } from "../../utils/dates";
 import { getPassMark } from "../../utils/settings";
 import { activeTraining, newTraining } from "../../utils/trainingRecords";
 import Pill from "../common/Pill";
+import { AttendanceSection, DocumentsSection, SessionsSection } from "./TrainingLogs";
 
 const typeShort = (key) => TRAINING_TYPES.find((t) => t.key === key)?.short || key;
 const num = (v) => (v === "" || v === null || v === undefined ? null : Number(v));
@@ -54,7 +55,8 @@ function TrainingEditor({ employee, training, onSave }) {
       alert("This training type needs at least 3 days."); return;
     }
     onSave({
-      startDate: f.startDate, completionDate: f.completionDate, daysCompleted: days,
+      startDate: f.startDate, completionDate: f.completionDate,
+      ...(training.daysFromRegister ? {} : { daysCompleted: days }),
       customDays: customEditable ? num(f.customDays) : training.customDays,
       practical: f.practical, ojt: f.ojt, fieldTest: f.fieldTest,
       score: score === null ? null : Math.round(score),
@@ -75,7 +77,8 @@ function TrainingEditor({ employee, training, onSave }) {
         <div><label className="muted" htmlFor="tr-start">Start date</label><input id="tr-start" type="date" className="admin-input" value={f.startDate} onChange={set("startDate")} /></div>
         <div>
           <label className="muted" htmlFor="tr-days">Days completed {training.requiredDays ? `(min ${training.requiredDays})` : ""}</label>
-          <input id="tr-days" type="number" min="0" step="0.5" className="admin-input" value={f.daysCompleted} onChange={set("daysCompleted")} />
+          <input id="tr-days" type="number" min="0" step="0.5" className="admin-input" disabled={training.daysFromRegister} value={training.daysFromRegister ? training.daysCompleted : f.daysCompleted} onChange={set("daysCompleted")} />
+          {training.daysFromRegister && <div className="admin-row-meta">From attendance register</div>}
         </div>
         {customEditable && (
           <div>
@@ -136,6 +139,23 @@ export default function TrainingPanel({ employee, canDelete, onClose }) {
     setAdding(false);
   };
 
+  const [reason, setReason] = useState("");
+  const [newJob, setNewJob] = useState("");
+  const TRIGGERS = [
+    ["Absence", "Returned after absence over 1 year"],
+    ["Accident", "Returned after accident / dangerous occurrence"],
+    ["JobChange", "Changed job"],
+    ["Special", "New technology / equipment introduced"],
+  ];
+  const handleTrigger = (type) => {
+    const t = newTraining(type, today(), { notes: reason.trim() });
+    addTraining(employee.id, t, reason.trim());
+    if (type === "JobChange" && newJob.trim()) updateEmployee(employee.id, { designation: newJob.trim() });
+    setSelectedId(t.id);
+    setReason("");
+    setNewJob("");
+  };
+
   const handleDelete = (t) => {
     if (employee.trainings.length <= 1) { alert("An employee must keep at least one training record."); return; }
     if (!window.confirm(`Delete this ${typeShort(t.type)} training record?`)) return;
@@ -191,8 +211,20 @@ export default function TrainingPanel({ employee, canDelete, onClose }) {
         ))}
       </div>
 
+      <div className="sub">
+        <strong>Retraining triggers</strong>
+        <div className="muted">One click creates a new 3-day-minimum training record (Rules 161 / 162) starting today.</div>
+        <div className="grid cols-3 mt-0">
+          <div><label className="muted" htmlFor="tg-reason">Reason / details</label><input id="tg-reason" className="admin-input" placeholder="e.g. returned from medical leave on 1 Oct" value={reason} onChange={(e) => setReason(e.target.value)} /></div>
+          <div><label className="muted" htmlFor="tg-job">New job (for job change)</label><input id="tg-job" className="admin-input" placeholder="New designation / job" value={newJob} onChange={(e) => setNewJob(e.target.value)} /></div>
+        </div>
+        <div className="trigger-row">
+          {TRIGGERS.map(([type, label]) => <button key={type} className="btn secondary" onClick={() => handleTrigger(type)}>{label}</button>)}
+        </div>
+      </div>
+
       <div className="row-gap mt-12">
-        <button className="btn secondary" onClick={() => setAdding((v) => !v)}>+ New training</button>
+        <button className="btn secondary" onClick={() => setAdding((v) => !v)}>+ New training (any type)</button>
       </div>
       {adding && (
         <div className="panel open">
@@ -214,6 +246,19 @@ export default function TrainingPanel({ employee, canDelete, onClose }) {
       )}
 
       <TrainingEditor key={selected.id} employee={employee} training={selected} onSave={(patch) => updateTraining(employee.id, selected.id, patch)} />
+
+      <details className="sub" open>
+        <summary>Attendance register ({(selected.attendance || []).length} entries)</summary>
+        <AttendanceSection employee={employee} training={selected} />
+      </details>
+      <details className="sub">
+        <summary>Training log ({(selected.sessions || []).length} sessions)</summary>
+        <SessionsSection employee={employee} training={selected} />
+      </details>
+      <details className="sub">
+        <summary>Documents ({(selected.documents || []).length})</summary>
+        <DocumentsSection employee={employee} training={selected} />
+      </details>
     </div>
   );
 }
