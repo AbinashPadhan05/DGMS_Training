@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AttendancePage from "../../pages/common/AttendancePage";
 import AuditPage from "../../pages/admin/AuditPage";
 import TrainersPage from "../../pages/admin/TrainersPage";
 import CircularsPage from "../../pages/admin/CircularsPage";
@@ -22,6 +23,7 @@ export default function AdminShell() {
         <main>
           {page === "overview" && <OverviewPage onNavigate={setPage} />}
           {page === "employees" && <EmployeesPage />}
+          {page === "attendance" && <AttendancePage />}
           {page === "managers" && <ManagersPage />}
           {page === "trainers" && <TrainersPage />}
           {page === "circulars" && <CircularsPage />}

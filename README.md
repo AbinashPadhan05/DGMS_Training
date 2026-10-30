@@ -39,6 +39,7 @@ The site tracks training; it does not deliver it.
 
 ### Records, retention and audit
 
+- **Attendance page** (Manager and Admin sidebar → *Attendance*): pick a date, mark Present / Half day / Absent / Leave for many employees at once ("Mark all unmarked as Present"), then Save. Shows employees whose training is still running; tick "Show all active employees" to include others. Writes into each employee's attendance register.
 - **Attendance register** per training record (day-wise Present / Half day / Absent / Leave, range entry skips Sundays). When used, days completed are calculated from it.
 - **Training log:** sessions with module, topic, trainer and hours. Warns when an OJT session has a trainer who is not an authorized OJT trainer.
 - **Trainers register** (training officer, instructors, authorized OJT trainers), shown to manager and admin.

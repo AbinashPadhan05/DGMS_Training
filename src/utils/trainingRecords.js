@@ -45,7 +45,8 @@ export function deriveTraining(e, t) {
   const required = requiredDaysFor(e, t);
   // The attendance register, when used, decides the days completed.
   const fromRegister = attendanceDays(t);
-  const days = fromRegister !== null ? fromRegister : hasNum(t.daysCompleted) ? Number(t.daysCompleted) : null;
+  // Days entered by hand before the register was started (openingDays) are kept and added to the register days.
+  const days = fromRegister !== null ? fromRegister + (Number(t.openingDays) || 0) : hasNum(t.daysCompleted) ? Number(t.daysCompleted) : null;
   const progress =
     required && days !== null
       ? Math.max(0, Math.min(100, Math.round((days / required) * 100)))
@@ -209,4 +210,20 @@ export function canPurge(e) {
   if (!r.archived) return { ok: false, reason: "Training records must be kept for the whole service and 5 years after it. Archive the employee instead of deleting." };
   if (!r.purgeable) return { ok: false, reason: `Records must be retained until ${r.until}. They cannot be deleted before that date.` };
   return { ok: true };
+}
+
+// Replaces a training's attendance list. Days entered by hand before the first register entry are kept as opening days.
+export function withAttendance(t, list) {
+  const had = (t.attendance || []).length > 0;
+  const sorted = [...list].sort((a, b) => (a.date < b.date ? -1 : 1));
+  let openingDays = Number(t.openingDays) || 0;
+  if (!had && sorted.length && !openingDays && Number(t.daysCompleted) > 0) openingDays = Number(t.daysCompleted);
+  if (!sorted.length) openingDays = 0; // daysCompleted already holds the last total
+  return { ...t, attendance: sorted, openingDays };
+}
+
+// Sets (or clears, when status is empty) one day's attendance.
+export function setAttendanceFor(t, { date, status, note = "" }) {
+  const rest = (t.attendance || []).filter((a) => a.date !== date);
+  return withAttendance(t, status ? [...rest, { date, status, note }] : rest);
 }

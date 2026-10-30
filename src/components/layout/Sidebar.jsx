@@ -6,11 +6,13 @@ export const EMPLOYEE_NAV = [
 ];
 export const MANAGER_NAV = [
   { page: "manager", icon: "📋", label: "Training Monitor" },
+  { page: "attendance", icon: "🗓️", label: "Attendance" },
   { page: "syllabus", icon: "📚", label: "Syllabus & Circulars" },
 ];
 export const ADMIN_NAV = [
   { page: "overview", icon: "📊", label: "Overview" },
   { page: "employees", icon: "👥", label: "Employees" },
+  { page: "attendance", icon: "🗓️", label: "Attendance" },
   { page: "managers", icon: "🧑‍💼", label: "Managers" },
   { page: "trainers", icon: "🧑‍🏫", label: "Trainers" },
   { page: "circulars", icon: "📚", label: "Circulars & Syllabus" },

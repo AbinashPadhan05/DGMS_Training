@@ -30,9 +30,10 @@ export function AttendanceSection({ employee, training }) {
   const list = [...(training.attendance || [])].reverse();
   return (
     <div>
+      <div className="muted">To mark many employees for one day, use the <strong>Attendance</strong> page in the menu.</div>
       <div className="muted">
         {training.daysFromRegister
-          ? <>Days completed are calculated from this register: <strong>{training.daysCompleted}</strong> of {training.requiredDays ?? "—"} required days.</>
+          ? <>Days completed are calculated from this register: <strong>{training.daysCompleted}</strong> of {training.requiredDays ?? "—"} required days{training.openingDays ? ` (includes ${training.openingDays} days recorded before the register)` : ""}.</>
           : "No attendance recorded yet. Once you add entries, days completed are calculated from the register."}
       </div>
       <div className="grid cols-4 mt-12">

@@ -111,3 +111,5 @@ table { width: 100%; border-collapse: collapse; }
 .sub[open] > summary { margin-bottom: 10px; }
 .trigger-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .scroll-box.tall { max-height: 460px; }
+.att-select { min-width: 160px; margin: 0; }
+.row-changed { background: #fffbea; }

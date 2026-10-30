@@ -10,7 +10,7 @@ import { getAuditActor, makeAuditEntry, MAX_AUDIT_ENTRIES } from "../utils/audit
 import { today } from "../utils/dates";
 import { setActiveSettings } from "../utils/settings";
 import { clone, isDuplicate } from "../utils/training";
-import { activeTraining, canPurge, finalize, newTraining, patchTraining, retainUntilFor } from "../utils/trainingRecords";
+import { activeTraining, canPurge, finalize, newTraining, patchTraining, retainUntilFor, setAttendanceFor, withAttendance } from "../utils/trainingRecords";
 
 const DataContext = createContext(null);
 
@@ -196,7 +196,7 @@ export function DataProvider({ children }) {
       const list = Array.isArray(entries) ? entries : [entries];
       changeTraining(empId, tid, (t) => {
         const dates = new Set(list.map((a) => a.date));
-        return { ...t, attendance: [...(t.attendance || []).filter((a) => !dates.has(a.date)), ...list].sort((a, b) => (a.date < b.date ? -1 : 1)) };
+        return withAttendance(t, [...(t.attendance || []).filter((a) => !dates.has(a.date)), ...list]);
       });
       audit("Attendance recorded", who(empId), list.length === 1 ? `${list[0].date}: ${list[0].status}` : `${list.length} days (${list[0].date} to ${list[list.length - 1].date}): ${list[0].status}`);
     },
@@ -204,11 +204,28 @@ export function DataProvider({ children }) {
   );
   const removeAttendance = useCallback(
     (empId, tid, date) => {
-      changeTraining(empId, tid, (t) => ({ ...t, attendance: (t.attendance || []).filter((a) => a.date !== date) }));
+      changeTraining(empId, tid, (t) => setAttendanceFor(t, { date, status: "" }));
       audit("Attendance removed", who(empId), date);
     },
     [changeTraining, audit, who]
   );
+  // One day's attendance for many employees at once. rows: [{ empId, trainingId, status, note }]; empty status clears the day.
+  const markAttendanceBulk = useCallback(
+    (date, rows) => {
+      const byEmp = new Map(rows.map((r) => [r.empId, r]));
+      setEmployees((list) =>
+        finalize(list.map((e) => {
+          const r = byEmp.get(e.id);
+          if (!r) return e;
+          return { ...e, trainings: e.trainings.map((t) => (t.id === r.trainingId ? setAttendanceFor(t, { date, status: r.status, note: r.note || "" }) : t)) };
+        }))
+      );
+      const count = (st) => rows.filter((r) => r.status === st).length;
+      audit("Attendance sheet saved", date, `${rows.length} employee(s): present ${count("Present")}, half day ${count("Half day")}, absent ${count("Absent")}, leave ${count("Leave")}, cleared ${rows.filter((r) => !r.status).length}`);
+    },
+    [setEmployees, audit]
+  );
+
   const addSession = useCallback(
     (empId, tid, session) => {
       changeTraining(empId, tid, (t) => ({ ...t, sessions: [...(t.sessions || []), { id: newId("S"), ...session }].sort((a, b) => (a.date < b.date ? -1 : 1)) }));
@@ -348,7 +365,7 @@ export function DataProvider({ children }) {
       settings, employees, questions, managers, circulars, trainers, auditLog,
       addEmployee, addEmployees, updateEmployee, toggleEmployeeStatus, archiveEmployee, restoreEmployee, deleteEmployee,
       addTraining, updateTraining, deleteTraining, submitAssessment,
-      addAttendance, removeAttendance, addSession, removeSession, addDocument, removeDocument,
+      addAttendance, removeAttendance, markAttendanceBulk, addSession, removeSession, addDocument, removeDocument,
       addQuestion, updateQuestion, deleteQuestion, resetQuestions,
       addManager, updateManager, deleteManager,
       addTrainer, updateTrainer, deleteTrainer,
@@ -359,7 +376,7 @@ export function DataProvider({ children }) {
       settings, employees, questions, managers, circulars, trainers, auditLog,
       addEmployee, addEmployees, updateEmployee, toggleEmployeeStatus, archiveEmployee, restoreEmployee, deleteEmployee,
       addTraining, updateTraining, deleteTraining, submitAssessment,
-      addAttendance, removeAttendance, addSession, removeSession, addDocument, removeDocument,
+      addAttendance, removeAttendance, markAttendanceBulk, addSession, removeSession, addDocument, removeDocument,
       addQuestion, updateQuestion, deleteQuestion, resetQuestions,
       addManager, updateManager, deleteManager,
       addTrainer, updateTrainer, deleteTrainer,

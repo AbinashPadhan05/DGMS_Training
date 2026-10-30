@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import Dashboard from "../../pages/employee/Dashboard";
 import Exam from "../../pages/employee/Exam";
 import Certificate from "../../pages/employee/Certificate";
+import AttendancePage from "../../pages/common/AttendancePage";
 import SyllabusPage from "../../pages/common/SyllabusPage";
 import ManagerPage from "../../pages/manager/ManagerPage";
 import Sidebar, { EMPLOYEE_NAV, MANAGER_NAV } from "./Sidebar";
@@ -29,6 +30,7 @@ export default function AppShell() {
           {current === "certificate" && <Certificate />}
           {current === "syllabus" && <SyllabusPage />}
           {current === "manager" && <ManagerPage />}
+          {current === "attendance" && <AttendancePage />}
         </main>
       </div>
     </>
