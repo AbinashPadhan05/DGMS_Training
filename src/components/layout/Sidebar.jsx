@@ -30,9 +30,12 @@ export default function Sidebar({ items, page, onNavigate, title = "Platform" })
         <button
           key={item.page}
           className={`nav ${page === item.page ? "active" : ""}`}
+          title={item.label}
+          aria-current={page === item.page ? "page" : undefined}
           onClick={() => onNavigate(item.page)}
         >
-          {item.icon} {item.label}
+          <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+          <span className="nav-label">{item.label}</span>
         </button>
       ))}
     </aside>

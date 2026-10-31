@@ -1,0 +1,62 @@
+/* App-wide polish: one button/control language, steadier chrome, better small screens. */
+body { font-family: Figtree, Inter, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: "Bricolage Grotesque", Figtree, Arial, sans-serif; letter-spacing: -.01em; }
+:focus-visible { outline: 3px solid rgba(227, 166, 43, .85); outline-offset: 2px; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; line-height: 1.2; transition: background-color .15s, color .15s, box-shadow .15s; }
+.btn:hover:not(:disabled) { background: #0b3d26; }
+.btn.secondary:hover:not(:disabled) { background: #d6e6dd; }
+.btn.gold:hover:not(:disabled) { background: #c8962f; }
+.btn.danger:hover:not(:disabled) { background: #a5301f; }
+.btn-sm { margin-left: 0; min-height: 34px; padding: 6px 13px; font-size: 14px; }
+.section-title .btn, .section-title .row-gap { flex: none; }
+.row-gap { align-items: center; }
+.employee-actions { align-items: center; }
+.employee-actions .btn, .trigger-row .btn { min-height: 34px; padding: 6px 12px; font-size: 13px; }
+
+/* topbar */
+.topbar { padding: 0 28px; gap: 16px; box-shadow: 0 1px 0 rgba(15, 81, 50, .04); }
+.topbar .brand { min-width: 0; font-size: 19px; }
+.topbar .brand span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .logo { flex: none; }
+.topbar .user { display: flex; align-items: center; gap: 12px; flex: none; }
+.topbar .user-name { color: var(--text); font-weight: 700; }
+
+/* sidebar */
+aside { flex: none; position: sticky; top: 68px; align-self: flex-start; height: calc(100vh - 68px); overflow-y: auto; }
+aside h3 { font-family: Figtree, Arial, sans-serif; margin: 0 0 12px; }
+.nav { display: flex; align-items: center; gap: 12px; font-size: 14.5px; font-weight: 600; transition: background-color .15s; }
+.nav-icon { width: 22px; text-align: center; font-size: 17px; flex: none; }
+.nav.active { box-shadow: inset 3px 0 0 var(--gold); }
+
+/* content */
+main { padding: 32px; }
+.section-title { flex-wrap: wrap; }
+.section-title h2 { font-size: 26px; }
+.card { margin-bottom: 20px; }
+.card > h3:first-child, .card > h2:first-child { margin-top: 0; }
+.table-wrap thead th { background: #f6f9f7; color: var(--muted); font-size: 13px; font-weight: 700; position: sticky; top: 0; }
+.table-wrap tbody tr:hover { background: #f8fbf9; }
+.toolbar-input { min-height: 40px; }
+.hero { padding: 28px 32px; }
+.hero h1 { font-size: 28px; }
+.pill { white-space: nowrap; }
+.admin-input { margin-top: 4px; }
+
+@media (max-width: 900px) {
+  aside { width: 68px; padding: 16px 8px; top: 68px; }
+  .nav { justify-content: center; padding: 12px 8px; font-size: inherit; }
+  .nav-label { display: none; }
+  .nav-icon { font-size: 20px; width: auto; }
+  .nav.active { box-shadow: none; }
+  .topbar { padding: 0 16px; }
+  main { padding: 18px 16px; }
+  .topbar .user-name { display: none; }
+}
+@media (max-width: 520px) {
+  .topbar .brand span { display: none; }
+  .section-title h2 { font-size: 22px; }
+  .hero { padding: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

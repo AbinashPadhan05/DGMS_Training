@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { goTo, navigate } from "../utils/router";
 
 const COPY = {
   manager: {
@@ -22,7 +23,11 @@ const COPY = {
 // variant "staff": Employee / Manager tabs (home page). variant "admin": administrator only (/admin).
 export default function LoginPage({ variant = "staff" }) {
   const { login } = useAuth();
-  const [role, setRole] = useState(variant === "admin" ? "admin" : "employee");
+  const [role, setRole] = useState(() => {
+    if (variant === "admin") return "admin";
+    const wanted = typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("role");
+    return wanted === "manager" ? "manager" : "employee";
+  });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -36,39 +41,49 @@ export default function LoginPage({ variant = "staff" }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError(login(role, username, password) || "");
+    const problem = login(role, username, password);
+    setError(problem || "");
+    if (!problem && variant === "staff") navigate("/");
   };
 
   return (
     <div className="login-screen">
-      <div className="login-shell">
-        <div className="login-brand">
-          <div className="logo big">MM</div>
-          <div>
+      <div className="login-side">
+        <div className="login-side-top">
+          <div className="login-brand">
+            <div className="logo big">MM</div>
             <div className="brand-title">MineMagma</div>
-            <div className="muted">Training Tracking & Monitoring Platform</div>
           </div>
+          <h1>Training tracking and monitoring for mines.</h1>
+          <p>Attendance, assessment, certificates and records, kept against DGMS Circular 01/2026.</p>
         </div>
+        <div className="login-side-foot">Demo prototype</div>
+      </div>
+
+      <section className="login-main">
+        {variant === "staff" && (
+          <a className="login-back" href="/" onClick={goTo("/")}>Back to home</a>
+        )}
 
         <div className="login-card">
           {variant === "staff" && (
-            <div className="login-tabs">
-              <button type="button" className={`login-tab ${role === "employee" ? "active" : ""}`} onClick={() => selectRole("employee")}>
-                👷 Employee Login
+            <div className="login-tabs" role="tablist">
+              <button type="button" role="tab" aria-selected={role === "employee"} className={`login-tab ${role === "employee" ? "active" : ""}`} onClick={() => selectRole("employee")}>
+                Employee
               </button>
-              <button type="button" className={`login-tab ${role === "manager" ? "active" : ""}`} onClick={() => selectRole("manager")}>
-                📋 Manager Login
+              <button type="button" role="tab" aria-selected={role === "manager"} className={`login-tab ${role === "manager" ? "active" : ""}`} onClick={() => selectRole("manager")}>
+                Manager
               </button>
             </div>
           )}
 
-          <div>
+          <div className="login-intro">
             <h2>{copy.title}</h2>
             <p className="muted">{copy.text}</p>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <label className="muted" htmlFor="loginUsername">Username / Employee ID</label>
+            <label htmlFor="loginUsername">Username / Employee ID</label>
             <input
               id="loginUsername"
               className="login-input"
@@ -80,7 +95,7 @@ export default function LoginPage({ variant = "staff" }) {
               autoFocus
             />
 
-            <label className="muted" htmlFor="loginPassword">Password</label>
+            <label htmlFor="loginPassword">Password</label>
             <input
               id="loginPassword"
               className="login-input"
@@ -107,9 +122,7 @@ export default function LoginPage({ variant = "staff" }) {
             </div>
           )}
         </div>
-
-        <div className="login-footer">© MineMagma • Demo Prototype</div>
-      </div>
+      </section>
     </div>
   );
 }

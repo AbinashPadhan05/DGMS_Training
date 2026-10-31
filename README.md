@@ -78,3 +78,11 @@ src/
 - Data is stored in the browser (`localStorage`); session in `sessionStorage`. This is a demo – passwords are plain text and
   the login is not secure. A real deployment needs a backend (API + database + hashed passwords).
 - `xlsx` is loaded lazily, only when Excel import/export is used.
+
+
+## Landing page and routes
+
+- `/` public landing page (DGMS checklist, how it works, roles) with Sign in buttons.
+- `/login` Employee / Manager sign-in (`/login?role=manager` preselects Manager).
+- `/admin` Admin sign-in, not linked from the public pages.
+- Fonts (Bricolage Grotesque, Figtree) load from Google Fonts; the app falls back to system fonts offline.

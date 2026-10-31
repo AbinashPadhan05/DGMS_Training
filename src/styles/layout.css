@@ -55,8 +55,6 @@ main { flex: 1; min-width: 0; padding: 30px; max-width: 1400px; margin: 0 auto; 
 @media (max-width: 900px) {
   aside { width: 75px; }
   aside h3 { display: none; }
-  .nav { font-size: 0; text-align: center; }
-  .nav::first-letter { font-size: 20px; }
   .grid, .grid.four, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
   main { padding: 18px; }
   .hero { flex-direction: column; align-items: flex-start; }

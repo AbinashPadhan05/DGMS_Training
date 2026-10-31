@@ -6,6 +6,8 @@ import "./styles/layout.css";
 import "./styles/components.css";
 import "./styles/login.css";
 import "./styles/certificate.css";
+import "./styles/landing.css";
+import "./styles/polish.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
